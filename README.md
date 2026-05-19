@@ -16,6 +16,37 @@ uses approximate workload and memory models to investigate how KV-cache might
 evolve from a tensor allocation concern into a first-class inference memory
 orchestration problem.
 
+## What KVFabric Is
+
+KVFabric is:
+
+- an architecture prototype
+- a systems simulator
+- a control-plane model
+
+for exploring future KV-aware inference-memory fabrics and accelerator
+architectures.
+
+The project investigates how future long-context inference systems might:
+
+- orchestrate KV-cache movement
+- manage memory residency
+- stage data through SRAM
+- overlap DMA and compute
+- compress cold KV state
+- coordinate HBM/CXL/DRAM tiers
+
+KVFabric does NOT currently implement:
+
+- production silicon
+- GPU kernels
+- FPGA hardware
+- production runtimes
+
+Instead, KVFabric explores the architectural mechanisms and
+scheduling-and-control concepts that a future inference-memory accelerator or
+memory-side orchestration engine might require.
+
 ## About KVFabric
 
 KVFabric is a systems-oriented research prototype for infrastructure
@@ -54,6 +85,30 @@ KVFabric does not replace GPU compute. It explores orchestration of KV-cache
 movement and residency around the compute path, especially when long-context
 decode becomes constrained by memory placement, bandwidth, and reuse behavior.
 
+## Architectural Evolution
+
+KVFabric is currently at the architecture exploration and simulation stage.
+
+Phase 1 focused on:
+
+- memory hierarchy simulation
+- residency modeling
+- scheduler experimentation
+
+Phase 2 expands into:
+
+- overlap-aware orchestration
+- trace-driven simulation
+- policy experimentation
+
+Future exploration may extend toward:
+
+- memory-side acceleration concepts
+- DMA offload architectures
+- KV-aware memory fabrics
+- CXL-attached orchestration engines
+- runtime integration concepts
+
 ## Why This Matters Now
 
 Long-context inference, multi-tenant serving, and reuse-heavy decode workloads
@@ -91,6 +146,42 @@ KVFabric exists to study that trend in a restrained way.
 
 KVFabric is currently an exploratory systems simulator and architecture
 prototype.
+
+## Future Accelerator Direction
+
+KVFabric also explores the possibility of future KV-aware inference-memory
+accelerators or memory-side orchestration engines.
+
+Potential future directions include:
+
+- DMA offload
+- compression acceleration
+- SRAM staging engines
+- CXL-attached orchestration layers
+- memory-side scheduling hardware
+
+These concepts are currently architectural explorations and simulator-driven
+studies, not product claims or hardware announcements.
+
+## Why KVFabric Is Different From a Compute Accelerator
+
+Traditional accelerators optimize:
+
+- tensor compute
+- matmul throughput
+- FLOPS
+
+KVFabric instead explores:
+
+- memory movement
+- residency orchestration
+- staging
+- DMA overlap
+- semantic scheduling
+- inference-memory fabrics
+
+KVFabric is intended to complement compute accelerators rather than replace
+them.
 
 ## Repository Layout
 
@@ -197,6 +288,8 @@ residency and movement tradeoffs.
 - [Architecture](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/architecture.md)
 - [Memory Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/memory_model.md)
 - [Accelerator Sketch](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/accelerator.md)
+- [Future Accelerator Architecture](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/future_accelerator_architecture.md)
+- [Architecture Glossary](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/architecture_glossary.md)
 - [Scheduler Policy](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/scheduler.md)
 - [Compression Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/compression.md)
 - [Industry Context](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/industry_context.md)

@@ -1,85 +1,91 @@
 # KVFlow
 
-KVFlow is a research prototype for semantic KV-cache orchestration in long-context LLM inference.
+KVFlow explores semantic KV-cache orchestration for long-context LLM
+inference.
 
-It explores a simple but increasingly relevant systems hypothesis: as inference context windows grow, KV-cache management becomes less of a raw tensor-allocation problem and more of a memory-orchestration problem. Instead of treating KV-cache only as bytes in HBM, KVFlow models each KV block as a first-class systems object with lifecycle, reuse probability, residency tier, compression state, and movement schedule.
+It is an exploratory simulator for studying whether future inference systems
+may require more explicit KV-aware memory orchestration layers. The project
+models KV residency tiering, compression, SRAM staging, prefetch scheduling,
+HBM/CXL movement tradeoffs, and hot/warm/cold KV classification. The goal is
+not to replace GPU compute or serving frameworks, but to give infrastructure
+and systems teams a concrete environment for reasoning about KV-cache
+movement, placement, and reuse.
 
-KVFlow is intentionally scoped as a simulator and architecture study. It does not replace a model-serving stack, a GPU runtime, or an accelerator vendor roadmap. It is meant to help infrastructure, runtime, and accelerator teams reason about what a KV-aware control plane or memory-side accelerator could look like.
-
-KVFlow currently demonstrates a modeling framework for studying KV-cache residency and movement tradeoffs.
-
-## Why KV-cache matters
-
-Modern inference stacks increasingly spend engineering effort on KV-cache placement, reuse, paging, routing, and movement:
-
-- Long-context decoding grows memory footprint roughly with generated context.
-- Multi-tenant serving adds contention and residency pressure.
-- Reuse-aware runtimes already differentiate between recently used and spillable state.
-- Emerging designs increasingly rely on tiered memory, prefetched movement, and compressed cache state.
-
-That trend suggests a broader architectural shift: KV-cache is starting to behave like its own memory hierarchy problem.
-
-## What KVFlow is
-
-KVFlow models:
-
-- KV blocks with semantic metadata such as hot/warm/cold temperature
-- A tiered memory path across SRAM, HBM, CXL memory, and host DRAM
-- Policy-driven prefetch, demotion, eviction, and compression
-- A DMA-like movement scheduler and decompression penalties
-- Baseline versus KV-aware execution for comparative analysis
-
-## What KVFlow is not
-
-- Not another GPU
-- Not a model-serving framework replacement
-- Not a fantasy chip startup deck
-- Not a claim of production advantage over existing vendors
-
-KVFlow is a careful architecture and runtime exploration.
+KVFlow is intentionally positioned as a careful architecture exploration. It
+uses approximate workload and memory models to investigate how KV-cache might
+evolve from a tensor allocation concern into a first-class inference memory
+orchestration problem.
 
 ## Architecture
 
 ```text
-                    +--------------------------------------+
-                    |             KVFlow Runtime           |
-                    |--------------------------------------|
-                    |  access stream + block metadata      |
-                    |  hot/warm/cold classifier            |
-                    |  residency tracker                   |
-                    |  prefetch / eviction scheduler       |
-                    |  compression policy engine           |
-                    +-------------------+------------------+
-                                        |
-                                        v
-                         +--------------+---------------+
-                         |         GPU Compute          |
-                         +--------------+---------------+
-                                        ||
-                                        || KVFlow DMA Prefetch
-                                        \/
-                         +--------------+---------------+
-                         |         SRAM staging         |
-                         +--------------+---------------+
-                                        ||
-                                        || Attention consumption
-                                        \/
-        +-------------------------------+------------------------------+
-        |                               |                              |
-   +----v----+                    +-----v-----+                  +-----v------+
-   |  SRAM   |                    |    HBM    |                  |    CXL     |
-   | staging |                    | main tier |                  | expansion  |
-   +----+----+                    +-----+-----+                  +-----+------+
-        |                               |                              |
-        +-------------------------------+------------------------------+
-                                        |
-                                  +-----v------+
-                                  | host DRAM  |
-                                  | cold spill |
-                                  +------------+
+                +----------------------+
+                |    GPU Compute       |
+                | Attention / Matmul   |
+                +----------+-----------+
+                           |
+                 KV Commands / Requests
+                           |
+                +----------v-----------+
+                |      KVFlow          |
+                |----------------------|
+                | DMA Scheduler        |
+                | Residency Tracker    |
+                | Compression Engine   |
+                | SRAM Staging Buffers |
+                | Prefetch Queue       |
+                +----------+-----------+
+                           |
+         +----------------+----------------+
+         |                |                |
+      +--v---+        +---v---+        +---v---+
+      | HBM  |        |  CXL  |        | DRAM  |
+      +------+        +-------+        +-------+
 ```
 
-## Repository layout
+KVFlow does not replace GPU compute. It explores orchestration of KV-cache
+movement and residency around the compute path, especially when long-context
+decode becomes constrained by memory placement, bandwidth, and reuse behavior.
+
+## Why This Matters Now
+
+Long-context inference, multi-tenant serving, and reuse-heavy decode workloads
+are pushing KV-cache toward the center of serving system design. As context
+windows grow, KV state expands quickly, HBM pressure rises, memory bandwidth
+becomes a larger share of the bottleneck, and inference economics depend more
+on how efficiently that state is placed and moved.
+
+The industry is already moving toward more explicit KV management. vLLM
+PagedAttention made KV layout and paging a first-order systems topic.
+TensorRT-LLM has brought more attention to KV reuse and compressed cache
+representations. NVIDIA Dynamo has highlighted KV-aware routing as part of
+runtime control. CXL memory pools and other expanded-memory designs add
+another dimension: orchestration across tiers may matter as much as raw
+capacity.
+
+KVFlow exists to study that trend in a restrained way.
+
+## What KVFlow Models
+
+- KV residency tiering across SRAM, HBM, CXL memory, and host DRAM
+- hot/warm/cold block classification
+- simulated KV compression states and decompression penalties
+- SRAM staging and prefetch queues
+- DMA-like movement scheduling
+- baseline versus KV-aware compare runs
+
+## What KVFlow Is Not
+
+- Not a production accelerator
+- Not a GPU replacement
+- Not a CUDA competitor
+- Not a benchmark suite
+- Not production silicon
+
+KVFlow is currently an exploratory systems simulator and architecture
+prototype.
+
+## Repository Layout
 
 ```text
 KVFlow/
@@ -104,11 +110,13 @@ python simulator/run_experiment.py --mode compare
 python -m pytest
 ```
 
-Python 3.11+ is recommended. The simulator uses the standard library only. `pytest` is optional for test execution.
+Python 3.11+ is recommended. The simulator uses the standard library only.
+`pytest` is optional for test execution.
 
 ## Early Exploratory Simulation Output
 
-The first synchronous version of the simulator produced the following exploratory output:
+The first synchronous version of the simulator produced the following
+exploratory output:
 
 ```text
 metric                      | baseline       | kvflow         | delta
@@ -124,25 +132,30 @@ blocks_evicted              | 0              | 0              | 0
 blocks_compressed           | 0              | 5,696          | 5,696
 ```
 
-These are not benchmark results. The early model showed reduced HBM traffic but higher simulated latency. That outcome is expected in the original version because movement, decompression, and consumption were treated conservatively and largely synchronously.
+These are not benchmark results. The early model showed reduced HBM traffic
+but higher simulated latency. That behavior is expected in the original
+version because movement, decompression, and consumption were modeled
+conservatively and largely synchronously.
 
 The fuller note is in [results/README.md](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/README.md).
 
-## Why overlap matters
+## Why Overlap Matters
 
-The first simulator revision made it easy to see traffic tradeoffs, but it overstated stall cost because it added DMA movement, decompression, and attention consumption too serially. The current simulator now includes an overlap-aware decode pipeline with:
+The first simulator revision made the movement tradeoff visible, but it also
+overstated stall cost because DMA movement, decompression, and attention
+consumption were treated too serially. The current simulator now includes an
+overlap-aware pipeline with asynchronous prefetch, SRAM staging, exposed
+versus hidden transfer accounting, and partial decompression overlap.
 
-- asynchronous DMA prefetch
-- prefetch queues
-- SRAM staging
-- partially overlapped decompression
-- exposed versus hidden transfer accounting
+This remains simulated and approximate. It is meant to improve the realism of
+the orchestration model, not to imply production performance claims.
 
-This remains approximate and exploratory, but it is a better framework for asking whether KV-aware movement can be hidden behind decode compute.
+## Current Compare Snapshot
 
-## Current compare chart
-
-The compare CLI now emits additional overlap metrics. A current overlap-aware snapshot looks like this:
+The current overlap-aware model still shows higher simulated latency than the
+baseline path, but the gap is materially smaller than in the first fully
+synchronous version and is now broken into exposed versus hidden transfer
+components.
 
 | Signal | Baseline | KVFlow |
 | --- | --- | --- |
@@ -150,27 +163,20 @@ The compare CLI now emits additional overlap metrics. A current overlap-aware sn
 | Exposed latency | `5,936,655.36` ns | `12,917,341.91` ns |
 | SRAM hit rate | `0.0000` | `0.1441` |
 
-This remains simulated and approximate. The current overlap-aware model still shows higher simulated latency than baseline, but the gap is substantially smaller than in the first fully synchronous version and is now broken into exposed versus hidden transfer components.
+KVFlow currently demonstrates a modeling framework for studying KV-cache
+residency and movement tradeoffs.
 
-## Model assumptions
+## Future Work
 
-KVFlow keeps the math intentionally approximate and documented:
-
-- KV block sizes are derived from layer, head, token, and dtype parameters.
-- Memory reads accumulate tier latency plus transfer time based on configured bandwidth.
-- Compression changes effective byte footprint and adds a decompression penalty.
-- Prefetch improves expected SRAM residency and may hide movement behind compute.
-
-See [docs/memory_model.md](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/memory_model.md), [docs/compression.md](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/compression.md), and [docs/methodology.md](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/methodology.md) for details.
-
-## Roadmap
-
-- Add richer multi-tenant traces and reuse-distance distributions
-- Model attention window skew and prompt-prefix sharing
-- Simulate QoS-aware placement under concurrent decode streams
-- Explore metadata-plane costs and scheduling queue contention
-- Add visualization for tier occupancy and access heat over time
-- Compare alternative compression and admission heuristics
+- asynchronous DMA overlap refinements
+- overlapped decompression with richer staging behavior
+- token-level pipeline simulation
+- realistic decode traces and reuse-distance studies
+- CXL-aware residency policies
+- KV locality prediction heuristics
+- scheduler policy comparisons across workloads
+- optional FPGA prototype exploration
+- runtime integration experiments with serving stacks
 
 ## Documentation
 
@@ -184,3 +190,15 @@ See [docs/memory_model.md](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/m
 - [Exploratory Results Note](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/README.md)
 - [Architecture Diagram Source](/C:/Users/ManishKL/Documents/Playground/KVFlow/diagrams/kvflow_architecture.md)
 - [Systems Blog Draft](/C:/Users/ManishKL/Documents/Playground/KVFlow/blog/kv-cache-is-the-new-memory-hierarchy.md)
+
+## Research Prototype Disclaimer
+
+KVFlow is an exploratory research simulator intended for studying KV-cache
+residency, movement, and compression tradeoffs in long-context inference
+systems.
+
+The project does not model real GPU kernels, production runtimes, or
+production silicon performance.
+
+Current latency numbers are conservative and largely synchronous because
+asynchronous overlap and pipeline execution are still under development.

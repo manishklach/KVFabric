@@ -16,6 +16,13 @@ uses approximate workload and memory models to investigate how KV-cache might
 evolve from a tensor allocation concern into a first-class inference memory
 orchestration problem.
 
+## About KVFlow
+
+KVFlow is a systems-oriented research prototype for infrastructure engineers,
+runtime teams, systems researchers, and accelerator architects who want to
+study KV-cache placement and movement as an inference-memory orchestration
+problem rather than only as a buffer-allocation problem.
+
 ## Architecture
 
 ```text
@@ -178,6 +185,10 @@ residency and movement tradeoffs.
 - optional FPGA prototype exploration
 - runtime integration experiments with serving stacks
 
+## Releases
+
+- [v0.1.0 — Initial architecture and simulation prototype](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.1.0.md)
+
 ## Documentation
 
 - [Architecture](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/architecture.md)
@@ -187,6 +198,9 @@ residency and movement tradeoffs.
 - [Compression Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/compression.md)
 - [Industry Context](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/industry_context.md)
 - [Methodology](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/methodology.md)
+- [Repository Description](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/repository_description.md)
+- [Recommended GitHub Topics](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/github_topics.md)
+- [Release Notes v0.1.0](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.1.0.md)
 - [Exploratory Results Note](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/README.md)
 - [Architecture Diagram Source](/C:/Users/ManishKL/Documents/Playground/KVFlow/diagrams/kvflow_architecture.md)
 - [Systems Blog Draft](/C:/Users/ManishKL/Documents/Playground/KVFlow/blog/kv-cache-is-the-new-memory-hierarchy.md)

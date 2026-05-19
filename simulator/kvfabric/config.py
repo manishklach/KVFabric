@@ -4,6 +4,8 @@ from dataclasses import asdict, dataclass, field
 import json
 from pathlib import Path
 
+from .hardware_profiles import get_hardware_profile
+
 
 DEFAULT_COMPRESSION_RATIOS: dict[str, float] = {"none": 1.0, "int8": 0.5, "int4": 0.25}
 DEFAULT_DECOMPRESSION_PENALTIES_NS: dict[str, float] = {"none": 0.0, "int8": 120.0, "int4": 260.0}
@@ -82,6 +84,8 @@ class PipelineConfig:
     compute_ns_per_access: float = 180.0
     sram_stage_latency_ns: float = 40.0
     max_prefetch_per_step: int = 48
+    prefetch_lead_steps: int = 2
+    max_staging_queue_depth: int = 256
 
     def as_dict(self) -> dict[str, float | int]:
         return asdict(self)
@@ -112,6 +116,8 @@ class SimulationConfig:
     policy: PolicyConfig = field(default_factory=PolicyConfig)
     pipeline: PipelineConfig = field(default_factory=PipelineConfig)
     cost: CostModelConfig = field(default_factory=CostModelConfig)
+    trace_path: Path | None = None
+    hardware_profile_name: str | None = None
     workload_path: Path = field(
         default_factory=lambda: Path(__file__).resolve().parent.parent.parent
         / "examples"
@@ -135,6 +141,42 @@ class SimulationConfig:
             self.workload_path = workload_path
         return self
 
+    def with_trace_path(self, trace_path: Path | None) -> "SimulationConfig":
+        if trace_path is not None:
+            self.trace_path = trace_path
+        return self
+
+    def with_hardware_profile(self, hardware_profile_name: str | None) -> "SimulationConfig":
+        if hardware_profile_name is None:
+            return self
+        profile = get_hardware_profile(hardware_profile_name)
+        self.hardware_profile_name = hardware_profile_name
+        self.tiers["sram"] = TierConfig(
+            "sram",
+            capacity_bytes=int(profile.sram_capacity_mb * 1024 * 1024),
+            bandwidth_gbps=profile.hbm_bandwidth_gbps * 4.0,
+            latency_ns=max(20.0, profile.estimated_latency_ns / 10.0),
+        )
+        self.tiers["hbm"] = TierConfig(
+            "hbm",
+            capacity_bytes=int(profile.hbm_capacity_gb * 1024 * 1024 * 1024),
+            bandwidth_gbps=profile.hbm_bandwidth_gbps,
+            latency_ns=profile.estimated_latency_ns,
+        )
+        self.tiers["cxl"] = TierConfig(
+            "cxl",
+            capacity_bytes=int(profile.cxl_capacity_gb * 1024 * 1024 * 1024),
+            bandwidth_gbps=profile.cxl_bandwidth_gbps,
+            latency_ns=profile.estimated_latency_ns * 3.0,
+        )
+        self.tiers["dram"] = TierConfig(
+            "dram",
+            capacity_bytes=int(profile.dram_capacity_gb * 1024 * 1024 * 1024),
+            bandwidth_gbps=profile.dram_bandwidth_gbps,
+            latency_ns=profile.estimated_latency_ns * 6.0,
+        )
+        return self
+
     def create_workload_config(self) -> WorkloadConfig:
         return WorkloadConfig.from_json(self.workload_path)
 
@@ -148,4 +190,6 @@ class SimulationConfig:
             "policy": self.policy.as_dict(),
             "pipeline": self.pipeline.as_dict(),
             "cost_model": self.cost.as_dict(),
+            "trace_path": str(self.trace_path) if self.trace_path is not None else None,
+            "hardware_profile": self.hardware_profile_name,
         }

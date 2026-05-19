@@ -20,11 +20,16 @@ class WorkloadBlockSpec:
 class Workload:
     """Generates a deterministic long-context decode access pattern."""
 
-    def __init__(self, config: WorkloadConfig) -> None:
+    def __init__(self, config: WorkloadConfig, request_prefix: str = "") -> None:
         self.config = config
+        self.request_prefix = request_prefix
         self.token_block_size = config.kv_block_tokens
         self.num_token_blocks = max(1, config.context_length // self.token_block_size)
         self.block_size_bytes = self.token_block_size * config.head_dim * config.dtype_bytes * 2
+
+    def block_id(self, layer_id: int, head_id: int, block_index: int) -> str:
+        prefix = f"{self.request_prefix}_" if self.request_prefix else ""
+        return f"{prefix}L{layer_id}_H{head_id}_B{block_index}"
 
     def build_block_catalog(self) -> list[WorkloadBlockSpec]:
         blocks: list[WorkloadBlockSpec] = []
@@ -34,7 +39,7 @@ class Workload:
                     token_start = block_index * self.token_block_size
                     blocks.append(
                         WorkloadBlockSpec(
-                            block_id=f"L{layer_id}_H{head_id}_B{block_index}",
+                            block_id=self.block_id(layer_id, head_id, block_index),
                             layer_id=layer_id,
                             head_id=head_id,
                             token_start=token_start,
@@ -69,13 +74,16 @@ class Workload:
                 cold_head = (step * 7 + layer_id) % heads
 
                 for block_index in range(recent_start, current_block + 1):
-                    step_accesses.append(f"L{layer_id}_H{hot_head}_B{block_index}")
+                    step_accesses.append(self.block_id(layer_id, hot_head, block_index))
 
-                step_accesses.append(f"L{layer_id}_H{warm_head}_B{warm_block}")
-                step_accesses.append(f"L{layer_id}_H{cold_head}_B{cold_stride_block}")
+                step_accesses.append(self.block_id(layer_id, warm_head, warm_block))
+                step_accesses.append(self.block_id(layer_id, cold_head, cold_stride_block))
 
             accesses.append(step_accesses)
         return accesses
+
+    def current_block_index_for_step(self, step: int) -> int:
+        return min(self.num_token_blocks - 1, step // 2)
 
     def assumed_block_size_bytes(self) -> int:
         return self.block_size_bytes

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from kvfabric.config import SimulationConfig
 from kvfabric.cost import estimate_run_cost
+from kvfabric.hardware_profiles import HARDWARE_PROFILES
 from kvfabric.metrics import SimulationMetrics
 from kvfabric.policies import HotWarmColdPolicy, LFUCompressionPolicy, LRUHotWindowPolicy
 from kvfabric.simulator import Simulator
@@ -45,6 +46,8 @@ def print_config(config_data: dict[str, object]) -> None:
 
     print("KVFabric configuration")
     print(f"workload_path               {config_data['workload_path']}")
+    print(f"trace_path                  {config_data['trace_path']}")
+    print(f"hardware_profile            {config_data['hardware_profile']}")
     print(f"workload_name               {workload['name']}")
     print(f"workload_description        {workload['description']}")
     print(f"model_layers                {workload['model_layers']}")
@@ -79,6 +82,12 @@ def print_config(config_data: dict[str, object]) -> None:
     print("Cost model")
     for key, value in cost_model.items():
         print(f"{key:28} {value}")
+    trace_summary = config_data.get("trace_summary")
+    if trace_summary is not None:
+        print("")
+        print("Trace summary")
+        for key, value in trace_summary.items():
+            print(f"{key:28} {value}")
     print("")
 
 
@@ -93,6 +102,8 @@ def print_compare_table(baseline: dict[str, float | int], kvfabric: dict[str, fl
         "compute_latency_ns",
         "transfer_latency_ns",
         "decompression_latency_ns",
+        "hidden_latency_ns",
+        "exposed_latency_ns",
         "hidden_transfer_ns",
         "exposed_transfer_ns",
         "overlap_ratio",
@@ -117,10 +128,14 @@ def print_compare_table(baseline: dict[str, float | int], kvfabric: dict[str, fl
         )
 
 
-def make_config(workload_path: str | None) -> SimulationConfig:
+def make_config(workload_path: str | None, trace_path: str | None, hardware_profile: str | None) -> SimulationConfig:
     config = SimulationConfig.default()
     if workload_path is not None:
         config.with_workload_path(Path(workload_path))
+    if trace_path is not None:
+        config.with_trace_path(Path(trace_path))
+    if hardware_profile is not None:
+        config.with_hardware_profile(hardware_profile)
     return config
 
 
@@ -143,10 +158,12 @@ def apply_policy_profile_tuning(config: SimulationConfig, profile_name: str) -> 
 def run_mode(
     mode: str,
     workload_path: str | None = None,
+    trace_path: str | None = None,
+    hardware_profile: str | None = None,
     policy_profile: tuple[type, type, type] | None = None,
     policy_profile_name: str | None = None,
 ) -> tuple[dict[str, float | int], dict[str, object]]:
-    config = make_config(workload_path)
+    config = make_config(workload_path, trace_path, hardware_profile)
     if policy_profile_name is not None:
         apply_policy_profile_tuning(config, policy_profile_name)
     if policy_profile is None:
@@ -288,6 +305,15 @@ def parse_args() -> argparse.Namespace:
         help="Optional workload JSON path. Example: examples/workloads/default_8k.json",
     )
     parser.add_argument(
+        "--trace",
+        help="Optional JSONL trace path. Example: examples/traces/sharegpt_small.jsonl",
+    )
+    parser.add_argument(
+        "--hardware",
+        choices=sorted(HARDWARE_PROFILES.keys()),
+        help="Optional hardware profile used to seed HBM, SRAM, CXL, and DRAM assumptions.",
+    )
+    parser.add_argument(
         "--show-config",
         action="store_true",
         help="Print workload, tier, compression, and pipeline assumptions before metrics.",
@@ -308,13 +334,13 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     if args.mode == "baseline":
-        metrics, config_data = run_mode("baseline", args.workload)
+        metrics, config_data = run_mode("baseline", args.workload, args.trace, args.hardware)
         if args.show_config:
             print_config(config_data)
         print_metrics("KVFabric baseline run", metrics)
         return
     if args.mode in {"kvflow", "kvfabric"}:
-        metrics, config_data = run_mode("kvfabric", args.workload)
+        metrics, config_data = run_mode("kvfabric", args.workload, args.trace, args.hardware)
         if args.show_config:
             print_config(config_data)
         print_metrics("KVFabric semantic orchestration run", metrics)
@@ -325,6 +351,8 @@ def main() -> None:
             metrics, _ = run_mode(
                 "kvfabric",
                 args.workload,
+                args.trace,
+                args.hardware,
                 policy_profile=policy_profile,
                 policy_profile_name=policy_name,
             )
@@ -345,7 +373,7 @@ def main() -> None:
             raise SystemExit("--mode sweep currently requires --sweep context_length")
         rows = []
         for workload_name, workload_path in SWEEP_WORKLOADS.items():
-            metrics, config_data = run_mode("kvfabric", workload_path)
+            metrics, config_data = run_mode("kvfabric", workload_path, args.trace, args.hardware)
             rows.append(
                 {
                     "workload": workload_name,
@@ -360,8 +388,8 @@ def main() -> None:
         print_sweep_table(rows)
         return
 
-    baseline, config_data = run_mode("baseline", args.workload)
-    kvfabric, _ = run_mode("kvfabric", args.workload)
+    baseline, config_data = run_mode("baseline", args.workload, args.trace, args.hardware)
+    kvfabric, _ = run_mode("kvfabric", args.workload, args.trace, args.hardware)
     if args.show_config:
         print_config(config_data)
     print_compare_table(baseline, kvfabric)

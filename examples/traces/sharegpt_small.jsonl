@@ -1,0 +1,5 @@
+{"request_id":"sg_0","prompt_length":384,"decode_length":96,"arrival_time_ns":0,"source":"sharegpt-inspired"}
+{"request_id":"sg_1","prompt_length":768,"decode_length":128,"arrival_time_ns":150000,"source":"sharegpt-inspired"}
+{"request_id":"sg_2","prompt_length":1536,"decode_length":160,"arrival_time_ns":300000,"source":"sharegpt-inspired"}
+{"request_id":"sg_3","prompt_length":640,"decode_length":72,"arrival_time_ns":450000,"source":"sharegpt-inspired"}
+{"request_id":"sg_4","prompt_length":2048,"decode_length":192,"arrival_time_ns":700000,"source":"sharegpt-inspired"}

@@ -25,6 +25,8 @@ class SimulationMetrics:
     blocks_compressed: int = 0
     prefetched_blocks: int = 0
     staged_blocks: int = 0
+    hidden_latency_ns: float = 0.0
+    exposed_latency_ns: float = 0.0
 
     @property
     def sram_hit_rate(self) -> float:
@@ -48,10 +50,10 @@ class SimulationMetrics:
 
     @property
     def overlap_ratio(self) -> float:
-        total = self.transfer_latency_ns + self.decompression_latency_ns
+        total = self.hidden_latency_ns + self.exposed_latency_ns
         if total == 0.0:
-            return 0.0
-        return self.hidden_transfer_ns / total
+            return 1.0
+        return self.hidden_latency_ns / total
 
     def as_dict(self) -> dict[str, float | int]:
         data = asdict(self)

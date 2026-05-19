@@ -1,5 +1,7 @@
 # KVFabric
 
+[![CI](https://github.com/manishklach/KVFabric/actions/workflows/ci.yml/badge.svg)](https://github.com/manishklach/KVFabric/actions/workflows/ci.yml)
+
 KVFabric explores semantic KV-cache orchestration, memory tiering, and
 HBM/CXL movement tradeoffs for long-context LLM inference systems.
 
@@ -290,13 +292,17 @@ python simulator/run_experiment.py --mode compare --show-config
 python simulator/run_experiment.py --mode compare --cost-model
 python simulator/run_experiment.py --mode policy-compare
 python simulator/run_experiment.py --mode sweep --sweep context_length
+python simulator/run_experiment.py --mode compare --hardware H100_SXM5
+python simulator/run_experiment.py --trace examples/traces/sharegpt_small.jsonl
 python simulator/run_experiment.py --mode compare --workload examples/workloads/default_8k.json
 python simulator/generate_trace.py --output examples/traces/chat_8k.jsonl --context-length 8192 --decode-steps 128
+python simulator/plot_results.py
 python -m pytest
 ```
 
-Python 3.11+ is recommended. The simulator uses the standard library only.
-`pytest` is optional for test execution.
+Python 3.11+ is recommended. The core simulator uses the standard library.
+`pytest` and `matplotlib` are optional extras for testing and figure
+generation.
 
 ## Early Exploratory Simulation Output
 
@@ -322,7 +328,7 @@ but higher simulated latency. That behavior is expected in the original
 version because movement, decompression, and consumption were modeled
 conservatively and largely synchronously.
 
-The fuller note is in [results/README.md](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/README.md).
+The fuller note is in [results/README.md](./results/README.md).
 
 ## Why Overlap Matters
 
@@ -337,19 +343,20 @@ the orchestration model, not to imply production performance claims.
 
 ## Current Compare Snapshot
 
-The current overlap-aware model still shows higher simulated latency than the
-baseline path, but the gap is materially smaller than in the first fully
-synchronous version and is now broken into exposed versus hidden transfer
-components.
+The current overlap-aware model still shows slightly higher simulated latency
+than the baseline path on the default workload, but the gap is materially
+smaller than in the first fully synchronous version and is now broken into
+exposed versus hidden transfer components.
 
 | Signal | Baseline | KVFabric |
 | --- | --- | --- |
 | HBM traffic | `166,199,296` bytes | `165,150,720` bytes |
-| Exposed latency | `2,853,841.92` ns | `2,182,295.40` ns |
+| Exposed latency | `2,858,921.92` ns | `2,868,534.68` ns |
 | SRAM hit rate | `0.0000` | `0.1107` |
 
 KVFabric currently demonstrates a modeling framework for studying KV-cache
-residency and movement tradeoffs.
+residency and movement tradeoffs, including cases where orchestration overhead
+still outweighs locality gains.
 
 ## Runtime API Direction
 
@@ -359,7 +366,13 @@ repository does not integrate with vLLM, SGLang, or TensorRT-LLM, but it now
 documents the sort of block-allocation, access-notification, prefetch, release,
 and telemetry hooks that such an orchestration layer would likely need.
 
-See [Runtime API Sketch](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/runtime_api.md).
+See [Runtime API Sketch](./docs/runtime_api.md).
+
+## Results Figures
+
+![HBM Bytes vs Context Length](./results/figures/hbm_vs_context_length.png)
+
+![Exposed vs Hidden Latency](./results/figures/exposed_vs_hidden_latency.png)
 
 ## Future Work
 
@@ -400,36 +413,40 @@ No. They are exploratory simulation outputs and architecture-oriented proxies.
 
 ## Releases
 
-- [v0.1.0 — Initial architecture and simulation prototype](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.1.0.md)
-- [v0.2.0-preview — Runtime API, policy comparisons, and cost-aware modeling](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.2.0-preview.md)
+- [v0.1.0 — Initial architecture and simulation prototype](./docs/releases/v0.1.0.md)
+- [v0.2.0-preview — Runtime API, policy comparisons, and cost-aware modeling](./docs/releases/v0.2.0-preview.md)
+- [v0.2.1 — Realistic hardware profiles, trace replay, and improved overlap modeling](./docs/releases/v0.2.1.md)
 
 ## Documentation
 
-- [Vision](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/vision.md)
-- [Why KVFabric Could Matter](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/why_kvfabric_matters.md)
-- [Runtime API Sketch](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/runtime_api.md)
-- [Architecture](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/architecture.md)
-- [Memory Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/memory_model.md)
-- [Accelerator Sketch](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/accelerator.md)
-- [Future Accelerator Architecture](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/future_accelerator_architecture.md)
-- [Architecture Glossary](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/architecture_glossary.md)
-- [Scheduler Policy](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/scheduler.md)
-- [Compression Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/compression.md)
-- [Cost Model Proxy](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/cost_model.md)
-- [Overlap Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/overlap_model.md)
-- [Industry Context](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/industry_context.md)
-- [Methodology](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/methodology.md)
-- [Related Work](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/related_work.md)
-- [Roadmap](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/roadmap.md)
-- [Repository Description](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/repository_description.md)
-- [Recommended GitHub Topics](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/github_topics.md)
-- [Release Notes v0.1.0](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.1.0.md)
-- [Release Notes v0.2.0-preview](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.2.0-preview.md)
-- [Exploratory Results Note](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/README.md)
-- [Policy Comparison Results](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/policy_comparison.md)
-- [Sensitivity Sweep Results](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/sensitivity_sweep.md)
-- [Architecture Diagram Source](/C:/Users/ManishKL/Documents/Playground/KVFlow/diagrams/kvfabric_architecture.md)
-- [Systems Blog Draft](/C:/Users/ManishKL/Documents/Playground/KVFlow/blog/kv-cache-is-the-new-memory-hierarchy.md)
+- [Vision](./docs/vision.md)
+- [Why KVFabric Could Matter](./docs/why_kvfabric_matters.md)
+- [Runtime API Sketch](./docs/runtime_api.md)
+- [Traces](./docs/traces.md)
+- [Architecture](./docs/architecture.md)
+- [Memory Model](./docs/memory_model.md)
+- [Accelerator Sketch](./docs/accelerator.md)
+- [Future Accelerator Architecture](./docs/future_accelerator_architecture.md)
+- [Architecture Glossary](./docs/architecture_glossary.md)
+- [Scheduler Policy](./docs/scheduler.md)
+- [Compression Model](./docs/compression.md)
+- [Cost Model Proxy](./docs/cost_model.md)
+- [Overlap Model](./docs/overlap_model.md)
+- [Industry Context](./docs/industry_context.md)
+- [Methodology](./docs/methodology.md)
+- [Related Work](./docs/related_work.md)
+- [Roadmap](./docs/roadmap.md)
+- [Repository Description](./docs/repository_description.md)
+- [Recommended GitHub Topics](./docs/github_topics.md)
+- [Release Notes v0.1.0](./docs/releases/v0.1.0.md)
+- [Release Notes v0.2.0-preview](./docs/releases/v0.2.0-preview.md)
+- [Release Notes v0.2.1](./docs/releases/v0.2.1.md)
+- [Exploratory Results Note](./results/README.md)
+- [Policy Comparison Results](./results/policy_comparison.md)
+- [Sensitivity Sweep Results](./results/sensitivity_sweep.md)
+- [ShareGPT-Inspired Evaluation](./results/sharegpt_evaluation.md)
+- [Architecture Diagram Source](./diagrams/kvfabric_architecture.md)
+- [Systems Blog Draft](./blog/kv-cache-is-the-new-memory-hierarchy.md)
 
 ## Related Work and Naming Note
 
@@ -439,7 +456,7 @@ prefix reuse for agent execution, while this repository focuses on inference
 memory hierarchy simulation for KV-cache residency, compression, staging, and
 movement.
 
-See [docs/related_work.md](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/related_work.md)
+See [Related Work](./docs/related_work.md)
 for the short comparison.
 
 ## Research Prototype Disclaimer
@@ -451,7 +468,8 @@ systems.
 The project does not model real GPU kernels, production runtimes, or
 production silicon performance.
 
-Current latency numbers are conservative and largely synchronous because
-asynchronous overlap and pipeline execution are still under development.
+Current latency numbers come from an approximate overlap-aware simulator. They
+are useful for architecture exploration, but they are not kernel measurements
+or production runtime timings.
 
 Previously developed under the working title KVFlow.

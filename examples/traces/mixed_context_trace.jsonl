@@ -1,0 +1,5 @@
+{"request_id":"mix_0","prompt_length":256,"decode_length":48,"arrival_time_ns":0,"source":"mixed-context"}
+{"request_id":"mix_1","prompt_length":4096,"decode_length":160,"arrival_time_ns":100000,"source":"mixed-context"}
+{"request_id":"mix_2","prompt_length":8192,"decode_length":128,"arrival_time_ns":400000,"source":"mixed-context"}
+{"request_id":"mix_3","prompt_length":2048,"decode_length":96,"arrival_time_ns":550000,"source":"mixed-context"}
+{"request_id":"mix_4","prompt_length":16384,"decode_length":192,"arrival_time_ns":900000,"source":"mixed-context"}

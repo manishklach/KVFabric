@@ -36,6 +36,11 @@ smaller model geometry than the default 8k workload so that the repository can
 run quick comparative experiments without turning the sweep into a large
 memory-footprint benchmark harness.
 
+Request-level replay traces are also supported through `examples/traces/` and
+`simulator/kvfabric/trace_loader.py`. These traces remain simplified, but they
+introduce prompt-length variation, decode-length variation, and overlapping
+arrivals that fixed single-stream workloads do not capture.
+
 ## Memory Tier Assumptions
 
 KVFabric models four tiers with the following default assumptions:
@@ -49,6 +54,11 @@ KVFabric models four tiers with the following default assumptions:
 
 These values are approximate and intended only to establish a plausible
 ordering of capacity and access cost.
+
+KVFabric also supports named hardware profiles such as `H100_SXM5`,
+`H200_SXM`, `B200_SXM`, and `MI300X`. Those profiles update HBM capacity,
+HBM bandwidth, SRAM staging capacity, and host-side tier assumptions while
+still keeping latency and staging behavior approximate.
 
 ## Compression Assumptions
 
@@ -88,6 +98,8 @@ The compare output now also reports conservative breakdown fields:
 - `compute_latency_ns`
 - `transfer_latency_ns`
 - `decompression_latency_ns`
+- `hidden_latency_ns`
+- `exposed_latency_ns`
 - `hidden_transfer_ns`
 - `exposed_transfer_ns`
 - `overlap_ratio`

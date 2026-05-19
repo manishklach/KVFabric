@@ -55,3 +55,9 @@ long_128k : #################
   is not yet severe enough to force the strongest tiering behavior.
 - KVFabric should be evaluated across where it helps and where it hurts, not
   only on workloads that are predisposed to show a benefit.
+
+## Current Limitations
+
+- These are still synthetic workloads rather than live serving traces.
+- Smaller geometry was chosen deliberately to keep the sweep reproducible in CI-like environments.
+- The current overlap model is still approximate.

@@ -119,3 +119,29 @@ The current repository does not attempt any of the following:
 
 This document is meant to make the control-plane concept concrete enough for
 discussion and experimentation, not to imply a production integration surface.
+
+## Minimal Usage Example
+
+The repository now includes concrete API scaffolding in
+`simulator/kvfabric/runtime_api.py` and an in-memory shim in
+`simulator/kvfabric/mock_runtime.py`.
+
+```python
+from kvfabric.mock_runtime import MockKVFabricRuntime
+from kvfabric.runtime_api import AccessNotification, BlockDescriptor, PrefetchRequest
+
+runtime = MockKVFabricRuntime()
+ref = runtime.allocate_block(
+    BlockDescriptor(
+        block_id="L0_H0_B0",
+        layer_id=0,
+        head_id=0,
+        token_start=0,
+        token_count=16,
+        size_bytes=8192,
+    )
+)
+runtime.notify_access(AccessNotification(ref=ref, step=0, timestamp_ns=0))
+runtime.request_prefetch(PrefetchRequest(refs=[ref], target_tier="sram", deadline_ns=10_000))
+snapshot = runtime.snapshot_telemetry()
+```

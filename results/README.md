@@ -1,7 +1,7 @@
 # Early Exploratory Simulation Output
 
 This note records the first exploratory `compare` output from the initial
-synchronous KVFlow simulator, before overlap-aware pipeline modeling was
+synchronous KVFabric simulator, before overlap-aware pipeline modeling was
 introduced. These are not benchmark results. They are an early simulation
 snapshot meant to expose the design space and make the initial modeling limits
 explicit.
@@ -32,7 +32,7 @@ bytes. Default memory-tier assumptions are:
 ## Recorded Exploratory Output
 
 ```text
-metric                      | baseline       | kvflow         | delta
+metric                      | baseline       | kvfabric       | delta
 ------------------------------------------------------------------------------
 total_bytes_moved           | 0              | 850,919,424    | 850,919,424
 hbm_bytes_read              | 1,329,594,368  | 27,262,976     | -1,302,331,392
@@ -56,14 +56,14 @@ conservative, largely synchronous way.
 ```text
 HBM Reads
 Baseline : ########################
-KVFlow   : #
+KVFabric : #
 
 SRAM Hit Rate
 Baseline : 0%
-KVFlow   : 51%
+KVFabric : 51%
 
 Compression Savings
-KVFlow   : 164 MB
+KVFabric : 164 MB
 ```
 
 ## Latency Breakdown
@@ -71,7 +71,7 @@ KVFlow   : 164 MB
 | Path | Components |
 | --- | --- |
 | Baseline | compute, HBM read, exposed transfer |
-| KVFlow | compute, HBM read, CXL read, decompression, hidden transfer, exposed transfer |
+| KVFabric | compute, HBM read, CXL read, decompression, hidden transfer, exposed transfer |
 
 The current compare output also reports:
 
@@ -92,10 +92,10 @@ The current compare output also reports:
 
 ## What This Result Does Show
 
-- KVFlow can model KV-cache tiering.
-- KVFlow can model hot/warm/cold residency.
-- KVFlow can model compression savings.
-- KVFlow can quantify HBM traffic reduction.
+- KVFabric can model KV-cache tiering.
+- KVFabric can model hot/warm/cold residency.
+- KVFabric can model compression savings.
+- KVFabric can quantify HBM traffic reduction.
 
 ## What This Result Does Not Show
 

@@ -1,6 +1,6 @@
-# KVFlow Repository Description
+# KVFabric Repository Description
 
-KVFlow explores semantic KV-cache orchestration for long-context LLM
+KVFabric explores semantic KV-cache orchestration for long-context LLM
 inference.
 
 It is a systems-oriented research prototype and exploratory simulator for
@@ -16,7 +16,7 @@ Modern inference systems are already encountering several related pressures:
 - memory scaling challenges as persistent state outgrows the hottest tier
 - orchestration overhead across placement, staging, and movement
 
-KVFlow models those pressures through a simplified but explicit view of
+KVFabric models those pressures through a simplified but explicit view of
 KV-cache as a first-class systems object. The simulator includes:
 
 - KV residency tiering across SRAM, HBM, CXL memory, and host DRAM
@@ -31,7 +31,7 @@ The broader question behind the project is whether future inference systems
 may require more explicit KV-aware memory orchestration layers, control planes,
 or accelerator-side services to manage decode-time state efficiently.
 
-KVFlow is intentionally positioned with restraint. It is:
+KVFabric is intentionally positioned with restraint. It is:
 
 - a research prototype
 - an exploratory simulator
@@ -53,10 +53,6 @@ feels closer to systems architecture work than to model-serving hype.
 
 ## Shorter Reuse Variant
 
-KVFlow is an exploratory simulator and systems architecture study for semantic
-KV-cache orchestration in long-context LLM inference. It models KV residency
-tiering, hot/warm/cold classification, compression, SRAM staging, prefetch
-scheduling, and HBM/CXL/DRAM movement tradeoffs to study whether future
-inference systems may require more explicit KV-aware memory orchestration
-layers. KVFlow is a research prototype, not production silicon or a GPU
-replacement.
+Exploratory AI infrastructure project modeling semantic KV-cache
+orchestration, memory tiering, and HBM/CXL movement tradeoffs for long-context
+LLM inference.

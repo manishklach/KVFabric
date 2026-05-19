@@ -1,6 +1,6 @@
-# KVFlow Compression Model
+# KVFabric Compression Model
 
-KVFlow models compression as a scheduling tradeoff rather than a numeric
+KVFabric models compression as a scheduling tradeoff rather than a numeric
 quantization study.
 
 ## Current Compression Assumptions
@@ -36,7 +36,7 @@ later access cost.
 
 ## Policy Choice
 
-KVFlow currently uses a simple policy:
+KVFabric currently uses a simple policy:
 
 - warm blocks may remain uncompressed
 - cold blocks are candidates for compression before demotion
@@ -47,7 +47,7 @@ between baseline and KV-aware behavior.
 
 ## What Compression Does Not Mean Here
 
-KVFlow is not making claims about:
+KVFabric is not making claims about:
 
 - real KV quantization quality
 - layer-specific precision sensitivity

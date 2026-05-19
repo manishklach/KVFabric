@@ -1,5 +1,9 @@
 # Related Work
 
+KVFabric was previously named KVFlow. The rename was introduced to avoid
+confusion with the separate academic KVFlow project focused on workflow-aware
+prefix caching for multi-agent systems.
+
 ## Name Collision: KVFlow vs Workflow-Aware KVFlow
 
 This repository is unrelated to the academic project and paper titled

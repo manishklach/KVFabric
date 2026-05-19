@@ -1,7 +1,7 @@
 # Recommended GitHub Topics
 
 The following topics are recommended for the GitHub repository. They are
-intended to position KVFlow as an AI infrastructure and systems research
+intended to position KVFabric as an AI infrastructure and systems research
 project without drifting into generic or hype-oriented tagging.
 
 - ai-infrastructure

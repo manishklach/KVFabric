@@ -12,7 +12,7 @@ from .workload import Workload
 
 
 class Simulator:
-    """Runs either the baseline path or the KVFlow path over the same workload."""
+    """Runs either the baseline path or the KVFabric path over the same workload."""
 
     def __init__(self, config: SimulationConfig, mode: str) -> None:
         if mode not in {"baseline", "kvflow"}:

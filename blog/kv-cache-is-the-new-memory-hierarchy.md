@@ -72,14 +72,14 @@ One possible outcome is a more explicit orchestration layer around KV-cache:
 - a software control plane
 - a memory-side service
 - a SmartNIC- or DPU-adjacent controller
-- a future accelerator block dedicated to movement and residency decisions
+- a future runtime layer dedicated to movement and residency decisions
 
 The point is not that one of these architectures is inevitable. The point is
 that the design pressure is becoming easier to describe in systems terms.
 
-## What KVFlow Simulates
+## What KVFabric Simulates
 
-KVFlow is a small research prototype for exploring that pressure through
+KVFabric is a small research prototype for exploring that pressure through
 simulation.
 
 It models:
@@ -97,10 +97,10 @@ explicit KV model.
 
 ## Why Overlap Matters
 
-A useful lesson from early KVFlow experiments is that traffic reduction alone
-is not enough. A model can reduce HBM reads and still look worse on latency if
-it assumes all movement and decompression costs are paid synchronously in the
-critical path.
+A useful lesson from early KVFabric experiments is that traffic reduction
+alone is not enough. A model can reduce HBM reads and still look worse on
+latency if it assumes all movement and decompression costs are paid
+synchronously in the critical path.
 
 That is why overlap matters. Real systems try to hide movement behind useful
 work whenever possible. DMA prefetch, staged SRAM buffers, decompression
@@ -110,7 +110,7 @@ architecture exploration has to model that distinction, even approximately.
 
 ## Limitations
 
-KVFlow remains intentionally approximate.
+KVFabric remains intentionally approximate.
 
 It does not attempt to model:
 

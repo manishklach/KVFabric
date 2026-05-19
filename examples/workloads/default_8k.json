@@ -1,6 +1,6 @@
 {
   "name": "default_8k_decode",
-  "description": "Synthetic 8k-context decode workload for early KVFlow experiments",
+  "description": "Synthetic 8k-context decode workload for early KVFabric experiments",
   "model_layers": 32,
   "num_heads": 32,
   "head_dim": 128,

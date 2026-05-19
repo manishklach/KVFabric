@@ -16,7 +16,7 @@ def test_compare_mode_reports_both_paths() -> None:
         check=True,
     )
     assert "baseline" in result.stdout
-    assert "kvflow" in result.stdout
+    assert "kvfabric" in result.stdout
     assert "simulated_latency_ns" in result.stdout
 
 
@@ -35,7 +35,7 @@ def test_compare_mode_can_show_config() -> None:
         text=True,
         check=True,
     )
-    assert "KVFlow configuration" in result.stdout
+    assert "KVFabric configuration" in result.stdout
     assert "kv_block_tokens" in result.stdout
 
 

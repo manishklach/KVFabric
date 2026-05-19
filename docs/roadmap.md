@@ -1,4 +1,4 @@
-# KVFlow Roadmap
+# KVFabric Roadmap
 
 ## v0.2.0 Target: Trace-Driven and Policy-Comparative Simulation
 

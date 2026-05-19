@@ -1,6 +1,6 @@
-# KVFlow Methodology
+# KVFabric Methodology
 
-KVFlow is an approximate simulator for studying KV-cache residency and
+KVFabric is an approximate simulator for studying KV-cache residency and
 movement tradeoffs. It is not a hardware benchmark harness and does not
 attempt to reproduce production kernel timing.
 
@@ -10,7 +10,7 @@ The current default workload is loaded from
 `examples/workloads/default_8k.json` and uses:
 
 - `name: default_8k_decode`
-- `description: Synthetic 8k-context decode workload for early KVFlow experiments`
+- `description: Synthetic 8k-context decode workload for early KVFabric experiments`
 - `model_layers: 32`
 - `num_heads: 32`
 - `head_dim: 128`
@@ -27,12 +27,12 @@ kv_block_tokens * head_dim * dtype_bytes * 2 = 16 * 128 * 2 * 2 = 8,192 bytes
 ```
 
 The access pattern intentionally mixes recent-window reuse, medium-range
-reuse, and colder long-tail accesses so the simulator can exercise hot/warm/cold
-placement policies.
+reuse, and colder long-tail accesses so the simulator can exercise
+hot/warm/cold placement policies.
 
 ## Memory Tier Assumptions
 
-KVFlow models four tiers with the following default assumptions:
+KVFabric models four tiers with the following default assumptions:
 
 | Tier | Capacity | Bandwidth | Latency |
 | --- | ---: | ---: | ---: |

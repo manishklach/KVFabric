@@ -8,7 +8,7 @@ from kvflow.trace import generate_synthetic_trace, write_trace
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Generate a synthetic KVFlow trace for locality experiments.")
+    parser = argparse.ArgumentParser(description="Generate a synthetic KVFabric trace for locality experiments.")
     parser.add_argument("--output", required=True, help="Output JSONL trace path.")
     parser.add_argument("--context-length", type=int, default=8192, help="Synthetic context length.")
     parser.add_argument("--decode-steps", type=int, default=128, help="Synthetic decode steps.")
@@ -20,7 +20,7 @@ def main() -> None:
     args = parse_args()
     workload = WorkloadConfig(
         name="synthetic_trace_workload",
-        description="Synthetic trace generator workload for KVFlow locality experiments",
+        description="Synthetic trace generator workload for KVFabric locality experiments",
         model_layers=32,
         num_heads=32,
         head_dim=128,
@@ -32,7 +32,7 @@ def main() -> None:
     )
     events = generate_synthetic_trace(workload, request_id=args.request_id)
     write_trace(events, Path(args.output))
-    print("Synthetic KVFlow trace written")
+    print("Synthetic KVFabric trace written")
     print("This is a synthetic trace generator for testing locality assumptions.")
     print("It is not a real vLLM trace.")
     print(f"events: {len(events)}")

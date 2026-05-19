@@ -1,6 +1,6 @@
-# KVFlow Scheduler Policy
+# KVFabric Scheduler Policy
 
-KVFlow uses simple policies that are intentionally transparent and easy to
+KVFabric uses simple policies that are intentionally transparent and easy to
 inspect.
 
 ## Temperature Classes
@@ -79,7 +79,7 @@ colder or less recent blocks are removed first.
 
 ## What Is Intentionally Omitted
 
-KVFlow does not currently model:
+KVFabric does not currently model:
 
 - token-level variable importance inside a block
 - cross-request prefix sharing

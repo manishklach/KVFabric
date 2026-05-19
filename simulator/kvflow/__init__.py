@@ -1,4 +1,4 @@
-"""KVFlow simulator package."""
+"""KVFabric simulator package."""
 
 from .config import CompressionConfig, PipelineConfig, SimulationConfig, TierConfig, WorkloadConfig
 from .metrics import SimulationMetrics

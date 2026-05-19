@@ -26,7 +26,7 @@ def print_config(config_data: dict[str, object]) -> None:
     policy = config_data["policy"]
     pipeline = config_data["pipeline"]
 
-    print("KVFlow configuration")
+    print("KVFabric configuration")
     print(f"workload_path               {config_data['workload_path']}")
     print(f"workload_name               {workload['name']}")
     print(f"workload_description        {workload['description']}")
@@ -84,7 +84,7 @@ def print_compare_table(baseline: dict[str, float | int], kvflow: dict[str, floa
 
     metric_width = 27
     value_width = 14
-    print(f"{'metric':{metric_width}} | {'baseline':{value_width}} | {'kvflow':{value_width}} | {'delta':{value_width}}")
+    print(f"{'metric':{metric_width}} | {'baseline':{value_width}} | {'kvfabric':{value_width}} | {'delta':{value_width}}")
     print("-" * (metric_width + value_width * 3 + 9))
     for key in keys:
         base_value = baseline[key]
@@ -110,12 +110,12 @@ def run_mode(mode: str, workload_path: str | None = None) -> tuple[dict[str, flo
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run KVFlow simulator experiments.")
+    parser = argparse.ArgumentParser(description="Run KVFabric simulator experiments.")
     parser.add_argument(
         "--mode",
         choices=["baseline", "kvflow", "compare"],
         default="compare",
-        help="Execution mode: baseline path, KVFlow path, or side-by-side comparison.",
+        help="Execution mode: baseline path, KVFabric path, or side-by-side comparison.",
     )
     parser.add_argument(
         "--workload",
@@ -135,13 +135,13 @@ def main() -> None:
         metrics, config_data = run_mode("baseline", args.workload)
         if args.show_config:
             print_config(config_data)
-        print_metrics("KVFlow baseline run", metrics)
+        print_metrics("KVFabric baseline run", metrics)
         return
     if args.mode == "kvflow":
         metrics, config_data = run_mode("kvflow", args.workload)
         if args.show_config:
             print_config(config_data)
-        print_metrics("KVFlow semantic orchestration run", metrics)
+        print_metrics("KVFabric semantic orchestration run", metrics)
         return
 
     baseline, config_data = run_mode("baseline", args.workload)

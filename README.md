@@ -1,7 +1,7 @@
-# KVFlow
+# KVFabric
 
-KVFlow explores semantic KV-cache orchestration for long-context LLM
-inference.
+KVFabric explores semantic KV-cache orchestration, memory tiering, and
+HBM/CXL movement tradeoffs for long-context LLM inference systems.
 
 It is an exploratory simulator for studying whether future inference systems
 may require more explicit KV-aware memory orchestration layers. The project
@@ -11,17 +11,17 @@ not to replace GPU compute or serving frameworks, but to give infrastructure
 and systems teams a concrete environment for reasoning about KV-cache
 movement, placement, and reuse.
 
-KVFlow is intentionally positioned as a careful architecture exploration. It
+KVFabric is intentionally positioned as a careful architecture exploration. It
 uses approximate workload and memory models to investigate how KV-cache might
 evolve from a tensor allocation concern into a first-class inference memory
 orchestration problem.
 
-## About KVFlow
+## About KVFabric
 
-KVFlow is a systems-oriented research prototype for infrastructure engineers,
-runtime teams, systems researchers, and accelerator architects who want to
-study KV-cache placement and movement as an inference-memory orchestration
-problem rather than only as a buffer-allocation problem.
+KVFabric is a systems-oriented research prototype for infrastructure
+engineers, runtime teams, systems researchers, and accelerator architects who
+want to study KV-cache placement and movement as an inference-memory
+orchestration problem rather than only as a buffer-allocation problem.
 
 ## Architecture
 
@@ -34,7 +34,7 @@ problem rather than only as a buffer-allocation problem.
                  KV Commands / Requests
                            |
                 +----------v-----------+
-                |      KVFlow          |
+                |     KVFabric         |
                 |----------------------|
                 | DMA Scheduler        |
                 | Residency Tracker    |
@@ -50,7 +50,7 @@ problem rather than only as a buffer-allocation problem.
       +------+        +-------+        +-------+
 ```
 
-KVFlow does not replace GPU compute. It explores orchestration of KV-cache
+KVFabric does not replace GPU compute. It explores orchestration of KV-cache
 movement and residency around the compute path, especially when long-context
 decode becomes constrained by memory placement, bandwidth, and reuse behavior.
 
@@ -70,9 +70,9 @@ runtime control. CXL memory pools and other expanded-memory designs add
 another dimension: orchestration across tiers may matter as much as raw
 capacity.
 
-KVFlow exists to study that trend in a restrained way.
+KVFabric exists to study that trend in a restrained way.
 
-## What KVFlow Models
+## What KVFabric Models
 
 - KV residency tiering across SRAM, HBM, CXL memory, and host DRAM
 - hot/warm/cold block classification
@@ -81,7 +81,7 @@ KVFlow exists to study that trend in a restrained way.
 - DMA-like movement scheduling
 - baseline versus KV-aware compare runs
 
-## What KVFlow Is Not
+## What KVFabric Is Not
 
 - Not a production accelerator
 - Not a GPU replacement
@@ -89,13 +89,13 @@ KVFlow exists to study that trend in a restrained way.
 - Not a benchmark suite
 - Not production silicon
 
-KVFlow is currently an exploratory systems simulator and architecture
+KVFabric is currently an exploratory systems simulator and architecture
 prototype.
 
 ## Repository Layout
 
 ```text
-KVFlow/
+KVFabric/
   docs/
   results/
   simulator/
@@ -110,7 +110,7 @@ KVFlow/
 ## Quickstart
 
 ```bash
-cd KVFlow
+cd KVFabric
 python simulator/run_experiment.py --mode baseline
 python simulator/run_experiment.py --mode kvflow
 python simulator/run_experiment.py --mode compare
@@ -129,7 +129,7 @@ The first synchronous version of the simulator produced the following
 exploratory output:
 
 ```text
-metric                      | baseline       | kvflow         | delta
+metric                      | baseline       | kvfabric       | delta
 ------------------------------------------------------------------------------
 total_bytes_moved           | 0              | 850,919,424    | 850,919,424
 hbm_bytes_read              | 1,329,594,368  | 27,262,976     | -1,302,331,392
@@ -167,13 +167,13 @@ baseline path, but the gap is materially smaller than in the first fully
 synchronous version and is now broken into exposed versus hidden transfer
 components.
 
-| Signal | Baseline | KVFlow |
+| Signal | Baseline | KVFabric |
 | --- | --- | --- |
 | HBM traffic | `166,199,296` bytes | `165,150,720` bytes |
 | Exposed latency | `2,853,841.92` ns | `2,182,295.40` ns |
 | SRAM hit rate | `0.0000` | `0.1107` |
 
-KVFlow currently demonstrates a modeling framework for studying KV-cache
+KVFabric currently demonstrates a modeling framework for studying KV-cache
 residency and movement tradeoffs.
 
 ## Future Work
@@ -223,7 +223,7 @@ for the short comparison.
 
 ## Research Prototype Disclaimer
 
-KVFlow is an exploratory research simulator intended for studying KV-cache
+KVFabric is an exploratory research simulator intended for studying KV-cache
 residency, movement, and compression tradeoffs in long-context inference
 systems.
 
@@ -232,3 +232,5 @@ production silicon performance.
 
 Current latency numbers are conservative and largely synchronous because
 asynchronous overlap and pipeline execution are still under development.
+
+Previously developed under the working title KVFlow.

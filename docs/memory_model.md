@@ -1,15 +1,17 @@
-# KVFlow Memory Model
+# KVFabric Memory Model
 
-KVFlow models a four-tier hierarchy:
+KVFabric models a four-tier hierarchy:
 
 - SRAM staging buffer
 - HBM
 - CXL-attached memory
 - host DRAM
 
-The model is intentionally approximate. It is meant to support thought experiments about scheduling and movement, not cycle-accurate hardware analysis.
+The model is intentionally approximate. It is meant to support thought
+experiments about scheduling and movement, not cycle-accurate hardware
+analysis.
 
-## Tier fields
+## Tier Fields
 
 Each memory tier is represented by:
 
@@ -18,7 +20,8 @@ Each memory tier is represented by:
 - `latency_ns`
 - `used_bytes`
 
-The simulator treats `bandwidth_gbps` as effective transfer bandwidth for KV movement. Transfer time is computed as:
+The simulator treats `bandwidth_gbps` as effective transfer bandwidth for KV
+movement. Transfer time is computed as:
 
 ```text
 transfer_time_ns = moved_bytes / bytes_per_ns
@@ -43,18 +46,21 @@ The total service cost of reading a block from a tier is:
 tier_latency_ns + transfer_time_ns + decompression_penalty_ns
 ```
 
-## Default intuition
+## Default Intuition
 
-The default configuration reflects a common systems intuition rather than a specific product:
+The default configuration reflects a common systems intuition rather than a
+specific product:
 
 - SRAM has very low latency and limited capacity.
 - HBM is the primary high-bandwidth working set.
 - CXL memory offers larger capacity with higher access cost.
 - host DRAM is the farthest tier and represents spill capacity.
 
-## Residency model
+## Residency Model
 
-A block occupies one current tier at a time. KVFlow also allows a block to be compressed, which changes its effective footprint and therefore tier occupancy pressure.
+A block occupies one current tier at a time. KVFabric also allows a block to
+be compressed, which changes its effective footprint and therefore tier
+occupancy pressure.
 
 The simulator does not explicitly model:
 
@@ -66,8 +72,12 @@ The simulator does not explicitly model:
 
 Those are future extensions, not current claims.
 
-## Why SRAM exists in the model
+## Why SRAM Exists In The Model
 
-SRAM in KVFlow is a staging buffer, not a full KV store. It represents the idea that a narrow hot set can be brought close to the attention datapath if the runtime predicts imminent reuse well enough.
+SRAM in KVFabric is a staging buffer, not a full KV store. It represents the
+idea that a narrow hot set can be brought close to the attention datapath if
+the runtime predicts imminent reuse well enough.
 
-This is useful for exploring whether a metadata-aware scheduler can improve effective hit rate without pretending all KV should permanently reside in the closest memory.
+This is useful for exploring whether a metadata-aware scheduler can improve
+effective hit rate without pretending all KV should permanently reside in the
+closest memory.

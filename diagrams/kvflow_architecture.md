@@ -1,4 +1,4 @@
-# KVFlow Architecture Diagram
+# KVFabric Architecture Diagram
 
 ```text
                                       +----------------------+
@@ -8,7 +8,7 @@
                                                  |
                                                  v
                                   +--------------+---------------+
-                                  |     KVFlow Control Plane     |
+                                  |    KVFabric Runtime Layer    |
                                   |------------------------------|
                                   | block metadata table         |
                                   | hot/warm/cold classifier     |
@@ -28,7 +28,7 @@
               +-----+------+             +-----+-----+                 +------+------+
                     ^                          |                               |
                     |                          |                               |
-                    |      KVFlow DMA Prefetch ||                               |
+                    |     KVFabric Prefetch    ||                               |
                     |                          ||                               |
               +-----+------+                   ||                         +------+------+
               | GPU Compute |==================++========================>| Attention   |

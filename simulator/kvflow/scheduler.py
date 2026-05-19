@@ -20,7 +20,7 @@ class SchedulerState:
 
 
 class KVScheduler:
-    """Placement and temperature logic for baseline and KVFlow modes."""
+    """Placement and temperature logic for baseline and KVFabric modes."""
 
     def __init__(
         self,

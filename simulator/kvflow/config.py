@@ -35,7 +35,7 @@ class WorkloadConfig:
     dtype_bytes: int
     kv_block_tokens: int = 16
     name: str = "default_8k_decode"
-    description: str = "Synthetic 8k-context decode workload for early KVFlow experiments"
+    description: str = "Synthetic 8k-context decode workload for early KVFabric experiments"
 
     @classmethod
     def from_json(cls, path: Path) -> "WorkloadConfig":
@@ -64,7 +64,7 @@ class CompressionConfig:
 
 @dataclass(slots=True)
 class PolicyConfig:
-    """Tunable knobs for the KVFlow scheduler."""
+    """Tunable knobs for the KVFabric scheduler."""
 
     recent_window: int = 128
     warm_reuse_threshold: int = 2

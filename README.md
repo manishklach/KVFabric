@@ -3,7 +3,9 @@
 [![CI](https://github.com/manishklach/KVFabric/actions/workflows/ci.yml/badge.svg)](https://github.com/manishklach/KVFabric/actions/workflows/ci.yml)
 
 KVFabric explores semantic KV-cache orchestration, memory tiering, and
-HBM/CXL movement tradeoffs for long-context LLM inference systems.
+HBM/CXL movement tradeoffs for long-context LLM inference systems. The live
+technical spec is available at
+[manishklach.github.io/KVFabric](https://manishklach.github.io/KVFabric/).
 
 It is an exploratory simulator for studying whether future inference systems
 may require more explicit KV-aware memory orchestration layers. The project
@@ -419,7 +421,7 @@ No. They are exploratory simulation outputs and architecture-oriented proxies.
 
 ## Documentation
 
-- [Technical Spec (HTML)](./docs/index.html)
+- [Technical Spec (Live Site)](https://manishklach.github.io/KVFabric/)
 - [Vision](./docs/vision.md)
 - [Why KVFabric Could Matter](./docs/why_kvfabric_matters.md)
 - [Runtime API Sketch](./docs/runtime_api.md)

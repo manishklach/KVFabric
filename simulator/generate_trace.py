@@ -3,8 +3,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from kvflow.config import WorkloadConfig
-from kvflow.trace import generate_synthetic_trace, write_trace
+from kvfabric.config import WorkloadConfig
+from kvfabric.trace import generate_synthetic_trace, write_trace
 
 
 def parse_args() -> argparse.Namespace:

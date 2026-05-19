@@ -1,15 +1,3 @@
-"""KVFabric simulator package."""
+"""Compatibility package for the historical kvflow import path."""
 
-from .config import CompressionConfig, PipelineConfig, SimulationConfig, TierConfig, WorkloadConfig
-from .metrics import SimulationMetrics
-from .simulator import Simulator
-
-__all__ = [
-    "CompressionConfig",
-    "PipelineConfig",
-    "SimulationConfig",
-    "SimulationMetrics",
-    "Simulator",
-    "TierConfig",
-    "WorkloadConfig",
-]
+from kvfabric import *  # noqa: F401,F403

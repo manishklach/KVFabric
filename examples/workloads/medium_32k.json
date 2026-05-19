@@ -1,0 +1,12 @@
+{
+  "name": "medium_32k_decode",
+  "description": "Synthetic 32k-context decode workload for sensitivity experiments",
+  "model_layers": 8,
+  "num_heads": 8,
+  "head_dim": 128,
+  "batch_size": 2,
+  "context_length": 32768,
+  "decode_steps": 96,
+  "dtype_bytes": 2,
+  "kv_block_tokens": 16
+}

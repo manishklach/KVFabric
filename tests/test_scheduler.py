@@ -1,8 +1,8 @@
-from kvflow.config import PolicyConfig, SimulationConfig
-from kvflow.kv_block import KVBlock
-from kvflow.memory_tier import MemoryTier
-from kvflow.metrics import SimulationMetrics
-from kvflow.scheduler import KVScheduler, SchedulerState
+from kvfabric.config import PolicyConfig, SimulationConfig
+from kvfabric.kv_block import KVBlock
+from kvfabric.memory_tier import MemoryTier
+from kvfabric.metrics import SimulationMetrics
+from kvfabric.scheduler import KVScheduler, SchedulerState
 
 
 def build_scheduler(mode: str) -> KVScheduler:
@@ -12,7 +12,7 @@ def build_scheduler(mode: str) -> KVScheduler:
 
 
 def test_hot_block_prefers_hbm_or_nearby_tier() -> None:
-    scheduler = build_scheduler("kvflow")
+    scheduler = build_scheduler("kvfabric")
     block = KVBlock(
         block_id="hot",
         layer_id=0,
@@ -30,7 +30,7 @@ def test_hot_block_prefers_hbm_or_nearby_tier() -> None:
 
 
 def test_cold_block_gets_compressed_and_demoted() -> None:
-    scheduler = build_scheduler("kvflow")
+    scheduler = build_scheduler("kvfabric")
     block = KVBlock(
         block_id="cold",
         layer_id=0,

@@ -30,6 +30,12 @@ The access pattern intentionally mixes recent-window reuse, medium-range
 reuse, and colder long-tail accesses so the simulator can exercise
 hot/warm/cold placement policies.
 
+Additional canned sweep workloads are stored in `examples/workloads/` for
+shorter and longer synthetic traces. Those sweep profiles intentionally use
+smaller model geometry than the default 8k workload so that the repository can
+run quick comparative experiments without turning the sweep into a large
+memory-footprint benchmark harness.
+
 ## Memory Tier Assumptions
 
 KVFabric models four tiers with the following default assumptions:
@@ -85,6 +91,8 @@ The compare output now also reports conservative breakdown fields:
 - `hidden_transfer_ns`
 - `exposed_transfer_ns`
 - `overlap_ratio`
+- `dma_overlap_ratio`
+- `decompression_overlap_ratio`
 
 ## Why The First Latency Model Was Conservative
 

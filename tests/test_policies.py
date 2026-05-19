@@ -1,6 +1,6 @@
-from kvflow.config import PolicyConfig
-from kvflow.kv_block import KVBlock
-from kvflow.policies import HotWarmColdPolicy, LFUCompressionPolicy, LRUHotWindowPolicy, PolicyState
+from kvfabric.config import PolicyConfig
+from kvfabric.kv_block import KVBlock
+from kvfabric.policies import HotWarmColdPolicy, LFUCompressionPolicy, LRUHotWindowPolicy, PolicyState
 
 
 def make_block(block_id: str, token_start: int, access_count: int, last_access_step: int, temperature: str = "cold") -> KVBlock:

@@ -6,10 +6,11 @@ HBM/CXL movement tradeoffs for long-context LLM inference systems.
 It is an exploratory simulator for studying whether future inference systems
 may require more explicit KV-aware memory orchestration layers. The project
 models KV residency tiering, compression, SRAM staging, prefetch scheduling,
-HBM/CXL movement tradeoffs, and hot/warm/cold KV classification. The goal is
-not to replace GPU compute or serving frameworks, but to give infrastructure
-and systems teams a concrete environment for reasoning about KV-cache
-movement, placement, and reuse.
+HBM/CXL movement tradeoffs, hot/warm/cold KV classification, and emerging
+control-plane concepts. The goal is not to replace GPU compute or serving
+frameworks, but to give infrastructure and systems teams a concrete
+environment for reasoning about KV-cache movement, placement, reuse, and
+future runtime-to-memory orchestration contracts.
 
 KVFabric is intentionally positioned as a careful architecture exploration. It
 uses approximate workload and memory models to investigate how KV-cache might
@@ -192,6 +193,7 @@ KVFabric exists to study that trend in a restrained way.
 - simulated KV compression states and decompression penalties
 - SRAM staging and prefetch queues
 - DMA-like movement scheduling
+- rough cost-aware memory tradeoff proxies
 - baseline versus KV-aware compare runs
 
 ## What KVFabric Is Not
@@ -269,7 +271,7 @@ KVFabric/
   docs/
   results/
   simulator/
-    kvflow/
+    kvfabric/
     examples/
     results/
   diagrams/
@@ -282,9 +284,12 @@ KVFabric/
 ```bash
 cd KVFabric
 python simulator/run_experiment.py --mode baseline
-python simulator/run_experiment.py --mode kvflow
+python simulator/run_experiment.py --mode kvfabric
 python simulator/run_experiment.py --mode compare
 python simulator/run_experiment.py --mode compare --show-config
+python simulator/run_experiment.py --mode compare --cost-model
+python simulator/run_experiment.py --mode policy-compare
+python simulator/run_experiment.py --mode sweep --sweep context_length
 python simulator/run_experiment.py --mode compare --workload examples/workloads/default_8k.json
 python simulator/generate_trace.py --output examples/traces/chat_8k.jsonl --context-length 8192 --decode-steps 128
 python -m pytest
@@ -346,6 +351,16 @@ components.
 KVFabric currently demonstrates a modeling framework for studying KV-cache
 residency and movement tradeoffs.
 
+## Runtime API Direction
+
+KVFabric also includes an early runtime API sketch for what a future
+KV-aware control plane might require from a serving runtime. The current
+repository does not integrate with vLLM, SGLang, or TensorRT-LLM, but it now
+documents the sort of block-allocation, access-notification, prefetch, release,
+and telemetry hooks that such an orchestration layer would likely need.
+
+See [Runtime API Sketch](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/runtime_api.md).
+
 ## Future Work
 
 - asynchronous DMA overlap refinements
@@ -358,14 +373,41 @@ residency and movement tradeoffs.
 - optional FPGA prototype exploration
 - runtime integration experiments with serving stacks
 
+## FAQ
+
+### Why not just use larger HBM?
+
+Larger HBM helps, but HBM is expensive, capacity-limited, and constrained by
+system power and bandwidth realities. Long-context, multi-tenant inference can
+scale KV memory faster than economically practical HBM capacity. KVFabric
+explores whether semantic tiering and orchestration can complement HBM rather
+than assuming HBM alone will absorb the entire footprint.
+
+### Is KVFabric an accelerator?
+
+KVFabric is currently an architecture prototype, simulator, and control-plane
+model for a future KV-aware inference-memory accelerator or orchestration
+layer. It is not production hardware.
+
+### Does KVFabric replace GPUs?
+
+No. GPUs and other accelerators perform tensor compute. KVFabric studies the
+memory orchestration path around them.
+
+### Are the numbers benchmarks?
+
+No. They are exploratory simulation outputs and architecture-oriented proxies.
+
 ## Releases
 
 - [v0.1.0 — Initial architecture and simulation prototype](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.1.0.md)
+- [v0.2.0-preview — Runtime API, policy comparisons, and cost-aware modeling](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.2.0-preview.md)
 
 ## Documentation
 
 - [Vision](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/vision.md)
 - [Why KVFabric Could Matter](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/why_kvfabric_matters.md)
+- [Runtime API Sketch](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/runtime_api.md)
 - [Architecture](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/architecture.md)
 - [Memory Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/memory_model.md)
 - [Accelerator Sketch](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/accelerator.md)
@@ -373,6 +415,8 @@ residency and movement tradeoffs.
 - [Architecture Glossary](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/architecture_glossary.md)
 - [Scheduler Policy](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/scheduler.md)
 - [Compression Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/compression.md)
+- [Cost Model Proxy](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/cost_model.md)
+- [Overlap Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/overlap_model.md)
 - [Industry Context](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/industry_context.md)
 - [Methodology](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/methodology.md)
 - [Related Work](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/related_work.md)
@@ -380,8 +424,11 @@ residency and movement tradeoffs.
 - [Repository Description](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/repository_description.md)
 - [Recommended GitHub Topics](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/github_topics.md)
 - [Release Notes v0.1.0](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.1.0.md)
+- [Release Notes v0.2.0-preview](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.2.0-preview.md)
 - [Exploratory Results Note](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/README.md)
-- [Architecture Diagram Source](/C:/Users/ManishKL/Documents/Playground/KVFlow/diagrams/kvflow_architecture.md)
+- [Policy Comparison Results](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/policy_comparison.md)
+- [Sensitivity Sweep Results](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/sensitivity_sweep.md)
+- [Architecture Diagram Source](/C:/Users/ManishKL/Documents/Playground/KVFlow/diagrams/kvfabric_architecture.md)
 - [Systems Blog Draft](/C:/Users/ManishKL/Documents/Playground/KVFlow/blog/kv-cache-is-the-new-memory-hierarchy.md)
 
 ## Related Work and Naming Note

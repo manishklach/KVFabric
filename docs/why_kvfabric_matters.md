@@ -115,3 +115,27 @@ deserve more explicit machinery than today’s stacks typically provide.
 
 KVFabric explores that possibility through simulation, architecture modeling,
 and policy experimentation rather than through hardware claims.
+
+## The So What
+
+If the KVFabric thesis is directionally correct, future inference systems may
+need more than faster tensor kernels. They may need:
+
+- explicit KV residency APIs
+- memory-side orchestration engines
+- CXL-aware KV placement
+- compression-aware schedulers
+- cost-aware memory tiering
+- runtime/hardware co-designed memory control planes
+
+That matters differently across the stack:
+
+- GPU vendors may need to think beyond raw FLOPS toward memory-side orchestration hooks.
+- cloud providers may care because memory tiering changes the economics of long-context serving.
+- inference runtime teams may need clearer APIs for block lifecycle, locality, and movement hints.
+- accelerator startups may find that control-plane differentiation matters as much as datapath novelty.
+- CXL and memory vendors may see inference as a workload that rewards richer residency-aware fabrics.
+
+The argument is not that one layer will replace everything else. The argument
+is that KV-aware orchestration may become an increasingly important control
+point in inference infrastructure.

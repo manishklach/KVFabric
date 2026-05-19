@@ -1,0 +1,12 @@
+{
+  "name": "short_2k_decode",
+  "description": "Synthetic short-context decode workload for sensitivity experiments",
+  "model_layers": 8,
+  "num_heads": 8,
+  "head_dim": 128,
+  "batch_size": 2,
+  "context_length": 2048,
+  "decode_steps": 64,
+  "dtype_bytes": 2,
+  "kv_block_tokens": 16
+}

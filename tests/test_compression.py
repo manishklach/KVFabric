@@ -1,5 +1,5 @@
-from kvflow.compression import apply_compression, compression_ratio, decompression_penalty_ns
-from kvflow.kv_block import KVBlock
+from kvfabric.compression import apply_compression, compression_ratio, decompression_penalty_ns
+from kvfabric.kv_block import KVBlock
 
 
 def test_compression_ratios_and_penalties() -> None:

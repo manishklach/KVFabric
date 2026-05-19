@@ -42,7 +42,7 @@ reuse.
 
 ## Policy Interface
 
-Scheduler logic is now exposed through `simulator/kvflow/policies.py`.
+Scheduler logic is now exposed through `simulator/kvfabric/policies.py`.
 
 The current policy classes are:
 
@@ -64,6 +64,15 @@ add new heuristics for:
 - compression aggressiveness
 - tier-specific eviction
 - workload-specific residency behavior
+
+The CLI also exposes an exploratory policy comparison mode:
+
+```bash
+python simulator/run_experiment.py --mode policy-compare
+```
+
+That mode is intended to compare policy shapes, not to declare a winning
+policy under production conditions.
 
 ## Placement Logic
 

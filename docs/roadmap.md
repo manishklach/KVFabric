@@ -1,5 +1,18 @@
 # KVFabric Roadmap
 
+## Current Scope vs Future Direction
+
+| Current Repository Scope | Future Architectural Exploration |
+| --- | --- |
+| Simulator | Accelerator architecture studies |
+| Scheduler policies | DMA offload engines |
+| Trace replay | Runtime integration |
+| Compression models | Compression acceleration |
+| Residency tracking | Hardware residency engines |
+| Memory hierarchy modeling | Memory-side orchestration hardware |
+| Overlap simulation | FPGA experiments |
+| Systems exploration | Silicon implementation research |
+
 ## v0.2.0 Target: Trace-Driven and Policy-Comparative Simulation
 
 Priorities:

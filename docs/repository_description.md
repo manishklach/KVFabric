@@ -32,8 +32,8 @@ may require more explicit KV-aware memory orchestration layers, control planes,
 or accelerator-side services to manage decode-time state efficiently.
 
 KVFabric explores future KV-aware inference-memory fabrics and accelerator
-architectures through simulation, policy modeling, and memory hierarchy
-experimentation.
+architectures through simulation, policy modeling, memory hierarchy
+experimentation, and control-plane oriented architecture studies.
 
 KVFabric is intentionally positioned with restraint. It is:
 

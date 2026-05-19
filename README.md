@@ -16,6 +16,21 @@ uses approximate workload and memory models to investigate how KV-cache might
 evolve from a tensor allocation concern into a first-class inference memory
 orchestration problem.
 
+## Research Positioning
+
+KVFabric should be viewed as:
+
+- a systems research platform
+- an architecture exploration framework
+- a future inference-memory study
+- a policy experimentation environment
+
+It should not be viewed as:
+
+- production inference software
+- production silicon
+- a benchmark competition
+
 ## What KVFabric Is
 
 KVFabric is:
@@ -46,6 +61,36 @@ KVFabric does NOT currently implement:
 Instead, KVFabric explores the architectural mechanisms and
 scheduling-and-control concepts that a future inference-memory accelerator or
 memory-side orchestration engine might require.
+
+## Future Inference Stack
+
+```text
++------------------------------------------------------+
+|                  Future Inference Stack              |
++------------------------------------------------------+
+|                    Application Layer                 |
++------------------------------------------------------+
+|             LLM Runtime / Scheduler                  |
++------------------------------------------------------+
+| KVFabric Layer                                       |
+| ---------------------------------------------------- |
+| Residency Tracking                                   |
+| DMA Scheduling                                       |
+| Compression / Rehydration                            |
+| SRAM Staging                                         |
+| Tier Placement                                       |
+| Overlap Coordination                                 |
+| +--------------------------------------------------+ |
+| HBM / CXL / DRAM / Storage                           |
+| +--------------------------------------------------+ |
+| GPU / Accelerator Compute                            |
+| +--------------------------------------------------+ |
++------------------------------------------------------+
+```
+
+KVFabric explores whether inference-memory orchestration may eventually become
+a first-class systems layer between the runtime and the heterogeneous memory
+resources that support long-context decode.
 
 ## About KVFabric
 
@@ -108,6 +153,19 @@ Future exploration may extend toward:
 - KV-aware memory fabrics
 - CXL-attached orchestration engines
 - runtime integration concepts
+
+## Current Scope vs Future Direction
+
+| Current Repository Scope | Future Architectural Exploration |
+| --- | --- |
+| Simulator | Accelerator architecture studies |
+| Scheduler policies | DMA offload engines |
+| Trace replay | Runtime integration |
+| Compression models | Compression acceleration |
+| Residency tracking | Hardware residency engines |
+| Memory hierarchy modeling | Memory-side orchestration hardware |
+| Overlap simulation | FPGA experiments |
+| Systems exploration | Silicon implementation research |
 
 ## Why This Matters Now
 
@@ -182,6 +240,27 @@ KVFabric instead explores:
 
 KVFabric is intended to complement compute accelerators rather than replace
 them.
+
+## Why This Could Become Strategic
+
+Important control points in computing tend to emerge around coordination:
+networking, storage, orchestration, and memory systems all became more central
+once simple local optimization stopped being enough.
+
+Inference infrastructure may be approaching a similar moment. If KV placement,
+movement, reuse, compression, and overlap meaningfully shape cost and latency,
+then inference-memory orchestration may itself become a strategic systems
+layer.
+
+That future layer could involve:
+
+- inference-memory orchestration services
+- KV-aware runtime APIs
+- residency-aware memory fabrics
+- memory-side scheduling systems
+
+KVFabric studies that possibility as an architecture thesis rather than as a
+product claim.
 
 ## Repository Layout
 
@@ -285,6 +364,8 @@ residency and movement tradeoffs.
 
 ## Documentation
 
+- [Vision](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/vision.md)
+- [Why KVFabric Could Matter](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/why_kvfabric_matters.md)
 - [Architecture](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/architecture.md)
 - [Memory Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/memory_model.md)
 - [Accelerator Sketch](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/accelerator.md)

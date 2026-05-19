@@ -16,6 +16,22 @@ on memory orchestration around inference, especially for long-context decode
 paths where memory movement, tier placement, and latency hiding increasingly
 shape end-to-end behavior.
 
+## Why This Could Become an Accelerator
+
+Accelerators historically emerge when a narrow set of constraints repeatedly
+dominates end-to-end behavior. In some domains that bottleneck is tensor
+compute. In others it is scheduling overhead, data movement overhead,
+orchestration overhead, or bandwidth pressure.
+
+Long-context inference may eventually create a similar inflection point around
+decode-time memory management. If KV placement, staging, compression, and
+movement are both frequent and policy-sensitive, then some portion of that work
+may justify more explicit hardware or hardware-assisted control paths.
+
+KVFabric currently studies those concepts through simulation and architecture
+modeling. The repository is meant to make the control-plane questions concrete
+before any claim about hardware implementation.
+
 ## System-Level Diagram
 
 ```text
@@ -202,6 +218,26 @@ Meanwhile:
 
 The goal is reducing exposed memory stalls rather than accelerating tensor
 compute itself.
+
+## Why KVFabric Is Different From Traditional Accelerators
+
+Traditional accelerators are usually framed around tensor compute:
+
+- matmul throughput
+- kernel efficiency
+- FLOPS utilization
+
+KVFabric instead explores:
+
+- inference-memory orchestration
+- semantic KV movement
+- residency-aware scheduling
+- overlap-aware memory pipelines
+- memory hierarchy coordination
+
+The point is not to replace compute accelerators. The point is to complement
+them with a richer model of the memory-side control plane that long-context
+inference may increasingly require.
 
 ## Future Research Questions
 

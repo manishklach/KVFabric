@@ -419,6 +419,7 @@ No. They are exploratory simulation outputs and architecture-oriented proxies.
 
 ## Documentation
 
+- [Technical Spec (HTML)](./docs/index.html)
 - [Vision](./docs/vision.md)
 - [Why KVFabric Could Matter](./docs/why_kvfabric_matters.md)
 - [Runtime API Sketch](./docs/runtime_api.md)

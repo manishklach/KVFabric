@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .config import DEFAULT_COMPRESSION_RATIOS, DEFAULT_DECOMPRESSION_PENALTIES_NS
 
-COMPRESSION_RATIOS: dict[str, float] = {"none": 1.0, "int8": 0.5, "int4": 0.25}
-DECOMPRESSION_PENALTIES_NS: dict[str, float] = {"none": 0.0, "int8": 120.0, "int4": 260.0}
+
+COMPRESSION_RATIOS: dict[str, float] = dict(DEFAULT_COMPRESSION_RATIOS)
+DECOMPRESSION_PENALTIES_NS: dict[str, float] = dict(DEFAULT_DECOMPRESSION_PENALTIES_NS)
 
 
 @dataclass(slots=True)
@@ -25,12 +27,14 @@ class KVBlock:
     staged_in_sram: bool = False
     last_prefetch_step: int = -1
 
-    def effective_size_bytes(self) -> int:
-        ratio = COMPRESSION_RATIOS[self.compression_state]
+    def effective_size_bytes(self, compression_ratios: dict[str, float] | None = None) -> int:
+        ratios = compression_ratios or COMPRESSION_RATIOS
+        ratio = ratios[self.compression_state]
         return max(1, int(self.size_bytes * ratio))
 
-    def compression_savings_bytes(self) -> int:
-        return self.size_bytes - self.effective_size_bytes()
+    def compression_savings_bytes(self, compression_ratios: dict[str, float] | None = None) -> int:
+        return self.size_bytes - self.effective_size_bytes(compression_ratios)
 
-    def decompression_penalty_ns(self) -> float:
-        return DECOMPRESSION_PENALTIES_NS[self.compression_state]
+    def decompression_penalty_ns(self, penalties_ns: dict[str, float] | None = None) -> float:
+        penalties = penalties_ns or DECOMPRESSION_PENALTIES_NS
+        return penalties[self.compression_state]

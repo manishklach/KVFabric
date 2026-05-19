@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 
-from .config import SimulationConfig, WorkloadConfig
+from .config import SimulationConfig
 from .kv_block import KVBlock
 from .memory_tier import MemoryTier
 from .metrics import SimulationMetrics
@@ -20,14 +20,20 @@ class Simulator:
 
         self.config = config
         self.mode = mode
-        self.workload_config = WorkloadConfig.from_json(config.workload_path)
+        self.workload_config = config.create_workload_config()
         self.workload = Workload(self.workload_config)
         self.tiers = {name: MemoryTier.from_config(tier_config) for name, tier_config in config.tiers.items()}
         self.metrics = SimulationMetrics()
-        self.scheduler = KVScheduler(self.tiers, config.policy, mode)
+        self.scheduler = KVScheduler(self.tiers, config.policy, mode, config.compression)
         self.pipeline = PipelineEngine(config.pipeline)
         self.blocks = self._build_blocks()
         self._seed_initial_residency()
+
+    def describe_config(self) -> dict[str, object]:
+        return {
+            **self.config.display_dict(),
+            "assumed_kv_block_size_bytes": self.workload.assumed_block_size_bytes(),
+        }
 
     def _build_blocks(self) -> dict[str, KVBlock]:
         blocks: dict[str, KVBlock] = {}
@@ -60,7 +66,7 @@ class Simulator:
                 block.temperature = "warm"
                 target = "hbm"
 
-            size_bytes = block.effective_size_bytes()
+            size_bytes = block.effective_size_bytes(self.config.compression.ratios)
             if not self.tiers[target].allocate(block.block_id, size_bytes):
                 for fallback in ("cxl", "dram"):
                     if self.tiers[fallback].allocate(block.block_id, size_bytes):
@@ -96,13 +102,15 @@ class Simulator:
             if block.staged_in_sram:
                 continue
             source_tier = self.tiers[block.current_tier]
-            size_bytes = block.effective_size_bytes()
+            size_bytes = block.effective_size_bytes(self.config.compression.ratios)
             transfer_time_ns = source_tier.latency_ns + source_tier.transfer_time_ns(size_bytes)
             if self.pipeline.schedule_prefetch(
                 block.block_id,
                 now_ns=self.pipeline.current_time_ns,
                 transfer_time_ns=transfer_time_ns,
-                decompression_time_ns=block.decompression_penalty_ns(),
+                decompression_time_ns=block.decompression_penalty_ns(
+                    self.config.compression.decompression_penalties_ns
+                ),
             ):
                 block.last_prefetch_step = state.step
                 self.metrics.prefetched_blocks += 1
@@ -129,18 +137,20 @@ class Simulator:
                 self.metrics.sram_hits += 1
             else:
                 tier = self.tiers[block.current_tier]
-                size_bytes = block.effective_size_bytes()
+                size_bytes = block.effective_size_bytes(self.config.compression.ratios)
                 if block_id not in unique_miss_ids:
                     unique_miss_ids.add(block_id)
                     required_transfer_ns += tier.latency_ns + tier.transfer_time_ns(size_bytes)
-                    required_decompression_ns += block.decompression_penalty_ns()
+                    required_decompression_ns += block.decompression_penalty_ns(
+                        self.config.compression.decompression_penalties_ns
+                    )
 
             if block.current_tier == "hbm":
-                self.metrics.hbm_bytes_read += block.effective_size_bytes()
+                self.metrics.hbm_bytes_read += block.effective_size_bytes(self.config.compression.ratios)
             elif block.current_tier == "cxl":
-                self.metrics.cxl_bytes_read += block.effective_size_bytes()
+                self.metrics.cxl_bytes_read += block.effective_size_bytes(self.config.compression.ratios)
             elif block.current_tier == "dram":
-                self.metrics.host_bytes_read += block.effective_size_bytes()
+                self.metrics.host_bytes_read += block.effective_size_bytes(self.config.compression.ratios)
 
             block.last_access_step = state.step
             block.access_count += 1
@@ -148,15 +158,19 @@ class Simulator:
         compute_time_ns = self.config.pipeline.compute_ns_per_access * len(accesses)
         step_latency = self.pipeline.model_step(compute_time_ns, required_transfer_ns, required_decompression_ns)
         self.metrics.simulated_latency_ns += step_latency.effective_step_latency_ns
+        self.metrics.compute_latency_ns += compute_time_ns
+        self.metrics.transfer_latency_ns += required_transfer_ns
+        self.metrics.decompression_latency_ns += required_decompression_ns
         self.metrics.overlapped_transfer_ns += step_latency.overlapped_transfer_ns
         self.metrics.exposed_transfer_ns += step_latency.exposed_transfer_ns
+        self.metrics.hidden_transfer_ns += step_latency.overlapped_transfer_ns
         self.metrics.overlapped_decompression_ns += step_latency.overlapped_decompression_ns
         self.metrics.exposed_decompression_ns += step_latency.exposed_decompression_ns
         self._refresh_sram_residency()
 
     def _stage_in_sram(self, block: KVBlock) -> bool:
         sram = self.tiers["sram"]
-        size_bytes = block.effective_size_bytes()
+        size_bytes = block.effective_size_bytes(self.config.compression.ratios)
         if not sram.can_fit(size_bytes):
             self._evict_sram_blocks(size_bytes)
         if not sram.allocate(block.block_id, size_bytes):
@@ -168,12 +182,10 @@ class Simulator:
         sram = self.tiers["sram"]
         if sram.can_fit(needed_bytes):
             return
-        eviction_candidates = sorted(
-            (block for block in self.blocks.values() if block.staged_in_sram),
-            key=lambda block: (block.temperature == "hot", block.last_access_step),
-        )
+        staged_blocks = [block for block in self.blocks.values() if block.staged_in_sram]
+        eviction_candidates = self.scheduler.eviction_policy.select_blocks_for_eviction(staged_blocks)
         for block in eviction_candidates:
-            sram.free(block.block_id, block.effective_size_bytes())
+            sram.free(block.block_id, block.effective_size_bytes(self.config.compression.ratios))
             block.staged_in_sram = False
             self.metrics.blocks_evicted += 1
             if sram.can_fit(needed_bytes):
@@ -182,5 +194,5 @@ class Simulator:
     def _refresh_sram_residency(self) -> None:
         for block in self.blocks.values():
             if block.staged_in_sram and block.temperature == "cold":
-                self.tiers["sram"].free(block.block_id, block.effective_size_bytes())
+                self.tiers["sram"].free(block.block_id, block.effective_size_bytes(self.config.compression.ratios))
                 block.staged_in_sram = False

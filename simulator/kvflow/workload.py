@@ -20,11 +20,11 @@ class WorkloadBlockSpec:
 class Workload:
     """Generates a deterministic long-context decode access pattern."""
 
-    def __init__(self, config: WorkloadConfig, token_block_size: int = 128) -> None:
+    def __init__(self, config: WorkloadConfig) -> None:
         self.config = config
-        self.token_block_size = token_block_size
-        self.num_token_blocks = max(1, config.context_length // token_block_size)
-        self.block_size_bytes = token_block_size * config.head_dim * config.dtype_bytes * 2
+        self.token_block_size = config.kv_block_tokens
+        self.num_token_blocks = max(1, config.context_length // self.token_block_size)
+        self.block_size_bytes = self.token_block_size * config.head_dim * config.dtype_bytes * 2
 
     def build_block_catalog(self) -> list[WorkloadBlockSpec]:
         blocks: list[WorkloadBlockSpec] = []
@@ -76,3 +76,6 @@ class Workload:
 
             accesses.append(step_accesses)
         return accesses
+
+    def assumed_block_size_bytes(self) -> int:
+        return self.block_size_bytes

@@ -3,10 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .compression import apply_compression
-from .config import PolicyConfig
+from .config import CompressionConfig, PolicyConfig
 from .kv_block import KVBlock
 from .memory_tier import MemoryTier
 from .metrics import SimulationMetrics
+from .policies import BasePolicy, HotWarmColdPolicy, LFUCompressionPolicy, LRUHotWindowPolicy, PolicyState
 
 
 @dataclass(slots=True)
@@ -14,32 +15,49 @@ class SchedulerState:
     step: int
     current_block_index: int
 
+    def to_policy_state(self) -> PolicyState:
+        return PolicyState(step=self.step, current_block_index=self.current_block_index)
+
 
 class KVScheduler:
     """Placement and temperature logic for baseline and KVFlow modes."""
 
-    def __init__(self, tiers: dict[str, MemoryTier], policy: PolicyConfig, mode: str) -> None:
+    def __init__(
+        self,
+        tiers: dict[str, MemoryTier],
+        policy: PolicyConfig,
+        mode: str,
+        compression: CompressionConfig,
+        promotion_policy: BasePolicy | None = None,
+        compression_policy: BasePolicy | None = None,
+        eviction_policy: BasePolicy | None = None,
+    ) -> None:
         self.tiers = tiers
         self.policy = policy
         self.mode = mode
+        self.compression = compression
+        self.promotion_policy = promotion_policy or LRUHotWindowPolicy(policy)
+        self.compression_policy = compression_policy or LFUCompressionPolicy(policy)
+        self.eviction_policy = eviction_policy or HotWarmColdPolicy(policy)
+        self.temperature_policy = HotWarmColdPolicy(policy)
 
     def classify_block(self, block: KVBlock, state: SchedulerState) -> str:
         if self.mode == "baseline":
             return "warm"
-
-        age_tokens = max(0, state.current_block_index * block.token_count - block.token_start)
-        if age_tokens <= self.policy.recent_window:
-            return "hot"
-        if block.access_count >= self.policy.warm_reuse_threshold:
-            return "warm"
-        return "cold"
+        return self.temperature_policy.temperature_for_block(block, state.to_policy_state())
 
     def compression_choice(self, block: KVBlock, state: SchedulerState) -> str:
         if self.mode == "baseline":
             return "none"
-        distance = max(0, state.current_block_index * block.token_count - block.token_start)
+
         if block.temperature != "cold":
             return "none"
+
+        selected = self.compression_policy.select_blocks_for_compression([block], state.to_policy_state(), limit=1)
+        if not selected:
+            return "none"
+
+        distance = max(0, state.current_block_index * block.token_count - block.token_start)
         if distance >= self.policy.cold_int4_distance:
             return "int4"
         return "int8"
@@ -66,13 +84,16 @@ class KVScheduler:
             if block.temperature == "hot" and not block.staged_in_sram:
                 unique_candidates.append(block)
                 seen.add(block_id)
-            if len(unique_candidates) >= self.policy.prefetch_window:
-                break
-        return unique_candidates
+
+        return self.promotion_policy.select_blocks_for_promotion(
+            unique_candidates,
+            state.to_policy_state(),
+            limit=self.policy.prefetch_window,
+        )
 
     def ensure_placement(self, block: KVBlock, metrics: SimulationMetrics, allow_eviction: bool = True) -> None:
         target_tiers = self.preferred_tiers(block)
-        size_bytes = block.effective_size_bytes()
+        size_bytes = block.effective_size_bytes(self.compression.ratios)
 
         for tier_name in target_tiers:
             if self._move_if_possible(block, tier_name, size_bytes, metrics):
@@ -105,24 +126,40 @@ class KVScheduler:
         if tier.can_fit(needed_bytes):
             return True
 
-        for resident_id in list(tier.resident_blocks):
-            if resident_id == preferred_block_id:
-                continue
-            tier.free(resident_id, needed_bytes)
+        resident_blocks = [block_id for block_id in tier.resident_blocks if block_id != preferred_block_id]
+        ranked_ids = self.eviction_policy.select_blocks_for_eviction(
+            [
+                KVBlock(
+                    block_id=block_id,
+                    layer_id=0,
+                    head_id=0,
+                    token_start=0,
+                    token_count=1,
+                    size_bytes=needed_bytes,
+                    temperature="cold",
+                )
+                for block_id in resident_blocks
+            ]
+        )
+        for resident in ranked_ids:
+            tier.free(resident.block_id, needed_bytes)
             metrics.blocks_evicted += 1
             if tier.can_fit(needed_bytes):
                 return True
         return tier.can_fit(needed_bytes)
 
     def update_block_state(self, block: KVBlock, state: SchedulerState, metrics: SimulationMetrics) -> None:
-        previous_size = block.effective_size_bytes()
+        previous_size = block.effective_size_bytes(self.compression.ratios)
         block.temperature = self.classify_block(block, state)
         desired_compression = self.compression_choice(block, state)
         if desired_compression != block.compression_state:
-            saved = apply_compression(block, desired_compression)
+            saved = apply_compression(block, desired_compression, self.compression)
             if saved > 0:
                 metrics.compression_savings_bytes += saved
                 metrics.blocks_compressed += 1
             current_tier = self.tiers[block.current_tier]
-            current_tier.used_bytes = max(0, current_tier.used_bytes - previous_size + block.effective_size_bytes())
+            current_tier.used_bytes = max(
+                0,
+                current_tier.used_bytes - previous_size + block.effective_size_bytes(self.compression.ratios),
+            )
         self.ensure_placement(block, metrics)

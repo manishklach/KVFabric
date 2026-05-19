@@ -114,6 +114,9 @@ cd KVFlow
 python simulator/run_experiment.py --mode baseline
 python simulator/run_experiment.py --mode kvflow
 python simulator/run_experiment.py --mode compare
+python simulator/run_experiment.py --mode compare --show-config
+python simulator/run_experiment.py --mode compare --workload examples/workloads/default_8k.json
+python simulator/generate_trace.py --output examples/traces/chat_8k.jsonl --context-length 8192 --decode-steps 128
 python -m pytest
 ```
 
@@ -166,9 +169,9 @@ components.
 
 | Signal | Baseline | KVFlow |
 | --- | --- | --- |
-| HBM traffic | `1,329,594,368` bytes | `708,837,376` bytes |
-| Exposed latency | `5,936,655.36` ns | `12,917,341.91` ns |
-| SRAM hit rate | `0.0000` | `0.1441` |
+| HBM traffic | `166,199,296` bytes | `165,150,720` bytes |
+| Exposed latency | `2,853,841.92` ns | `2,182,295.40` ns |
+| SRAM hit rate | `0.0000` | `0.1107` |
 
 KVFlow currently demonstrates a modeling framework for studying KV-cache
 residency and movement tradeoffs.
@@ -198,12 +201,25 @@ residency and movement tradeoffs.
 - [Compression Model](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/compression.md)
 - [Industry Context](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/industry_context.md)
 - [Methodology](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/methodology.md)
+- [Related Work](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/related_work.md)
+- [Roadmap](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/roadmap.md)
 - [Repository Description](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/repository_description.md)
 - [Recommended GitHub Topics](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/github_topics.md)
 - [Release Notes v0.1.0](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/releases/v0.1.0.md)
 - [Exploratory Results Note](/C:/Users/ManishKL/Documents/Playground/KVFlow/results/README.md)
 - [Architecture Diagram Source](/C:/Users/ManishKL/Documents/Playground/KVFlow/diagrams/kvflow_architecture.md)
 - [Systems Blog Draft](/C:/Users/ManishKL/Documents/Playground/KVFlow/blog/kv-cache-is-the-new-memory-hierarchy.md)
+
+## Related Work and Naming Note
+
+This repository is not affiliated with the academic KVFlow paper on
+multi-agent workflow prefix caching. That work focuses on workflow-aware
+prefix reuse for agent execution, while this repository focuses on inference
+memory hierarchy simulation for KV-cache residency, compression, staging, and
+movement.
+
+See [docs/related_work.md](/C:/Users/ManishKL/Documents/Playground/KVFlow/docs/related_work.md)
+for the short comparison.
 
 ## Research Prototype Disclaimer
 

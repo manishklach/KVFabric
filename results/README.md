@@ -6,6 +6,29 @@ introduced. These are not benchmark results. They are an early simulation
 snapshot meant to expose the design space and make the initial modeling limits
 explicit.
 
+## Workload Assumptions
+
+The current default workload is:
+
+- `model_layers: 32`
+- `num_heads: 32`
+- `head_dim: 128`
+- `batch_size: 4`
+- `context_length: 8192`
+- `decode_steps: 128`
+- `dtype_bytes: 2`
+- `kv_block_tokens: 16`
+
+Under the current simplified model, the assumed KV block size is `8,192`
+bytes. Default memory-tier assumptions are:
+
+| Tier | Capacity | Bandwidth | Latency |
+| --- | ---: | ---: | ---: |
+| SRAM | 512 MiB | 20,000 GB/s | 25 ns |
+| HBM | 8 GiB | 3,000 GB/s | 300 ns |
+| CXL | 24 GiB | 300 GB/s | 900 ns |
+| host DRAM | 64 GiB | 120 GB/s | 1,800 ns |
+
 ## Recorded Exploratory Output
 
 ```text
@@ -42,6 +65,22 @@ KVFlow   : 51%
 Compression Savings
 KVFlow   : 164 MB
 ```
+
+## Latency Breakdown
+
+| Path | Components |
+| --- | --- |
+| Baseline | compute, HBM read, exposed transfer |
+| KVFlow | compute, HBM read, CXL read, decompression, hidden transfer, exposed transfer |
+
+The current compare output also reports:
+
+- `compute_latency_ns`
+- `transfer_latency_ns`
+- `decompression_latency_ns`
+- `hidden_transfer_ns`
+- `exposed_transfer_ns`
+- `overlap_ratio`
 
 ## Current Limitations In The First Model
 

@@ -1,18 +1,22 @@
 from __future__ import annotations
 
-from .kv_block import COMPRESSION_RATIOS, DECOMPRESSION_PENALTIES_NS, KVBlock
+from .config import CompressionConfig, DEFAULT_COMPRESSION_RATIOS, DEFAULT_DECOMPRESSION_PENALTIES_NS
+from .kv_block import KVBlock
 
 
-def compression_ratio(state: str) -> float:
-    return COMPRESSION_RATIOS[state]
+def compression_ratio(state: str, config: CompressionConfig | None = None) -> float:
+    ratios = config.ratios if config is not None else None
+    return (ratios or DEFAULT_COMPRESSION_RATIOS)[state]
 
 
-def decompression_penalty_ns(state: str) -> float:
-    return DECOMPRESSION_PENALTIES_NS[state]
+def decompression_penalty_ns(state: str, config: CompressionConfig | None = None) -> float:
+    penalties = config.decompression_penalties_ns if config is not None else None
+    return (penalties or DEFAULT_DECOMPRESSION_PENALTIES_NS)[state]
 
 
-def apply_compression(block: KVBlock, state: str) -> int:
+def apply_compression(block: KVBlock, state: str, config: CompressionConfig | None = None) -> int:
     """Apply a simulated compression state and return bytes saved."""
-    previous_size = block.effective_size_bytes()
+    ratios = config.ratios if config is not None else None
+    previous_size = block.effective_size_bytes(ratios)
     block.compression_state = state
-    return max(0, previous_size - block.effective_size_bytes())
+    return max(0, previous_size - block.effective_size_bytes(ratios))

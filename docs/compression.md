@@ -1,45 +1,58 @@
 # KVFlow Compression Model
 
-KVFlow models compression as a scheduling tradeoff rather than a numeric quantization study.
+KVFlow models compression as a scheduling tradeoff rather than a numeric
+quantization study.
+
+## Current Compression Assumptions
+
+This is not real numerical KV quantization. It is a capacity and latency
+simulation model.
+
+- `none` is modeled as `1.0x` size
+- `int8` is modeled as `0.5x` size
+- `int4` is modeled as `0.25x` size
+
+Default decompression penalties are approximate and configurable:
+
+- `none = 0 ns`
+- `int8 = 120 ns`
+- `int4 = 260 ns`
+
+These parameters live in `CompressionConfig` and can be changed without
+changing the rest of the simulator structure.
+
+Future work may use more empirical assumptions informed by KV quantization
+papers such as KIVI, but the current model should be read only as a footprint
+and latency abstraction.
 
 ## States
 
-- `none` = 1.0x size
-- `int8` = 0.5x size
-- `int4` = 0.25x size
+- `none`
+- `int8`
+- `int4`
 
-These ratios are treated as effective storage compression factors.
+The simulator uses these states to adjust effective storage footprint and
+later access cost.
 
-## Penalties
+## Policy Choice
 
-Compressed blocks incur a simulated decompression penalty when they are read:
+KVFlow currently uses a simple policy:
 
-- `none` = 0 ns additional cost
-- `int8` = small penalty
-- `int4` = larger penalty
+- warm blocks may remain uncompressed
+- cold blocks are candidates for compression before demotion
+- colder and more distant blocks are more likely to use `int4`
 
-The exact values live in code and are easy to tune. They are chosen to express qualitative tradeoffs:
+This keeps the simulator legible while still allowing measurable differences
+between baseline and KV-aware behavior.
 
-- smaller footprint reduces capacity pressure and movement cost
-- heavier compression increases access overhead
-
-## Policy choice
-
-KVFlow uses a simple policy:
-
-- Warm blocks may remain uncompressed.
-- Cold blocks are compressed before demotion when helpful.
-- The coldest blocks prefer `int4` when pushed far from the active window.
-
-This keeps the simulator legible while still allowing measurable differences between baseline and KV-aware behavior.
-
-## What compression does not mean here
+## What Compression Does Not Mean Here
 
 KVFlow is not making claims about:
 
 - real KV quantization quality
 - layer-specific precision sensitivity
-- error bounds
-- model accuracy retention
+- accuracy retention
+- production compression kernels
 
-Those belong to future work. In this repository, compression is a systems-level abstraction for footprint and access-cost tradeoffs.
+In this repository, compression is a systems-level abstraction for footprint
+and access-cost tradeoffs.

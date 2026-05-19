@@ -19,6 +19,48 @@ def print_metrics(title: str, metrics: dict[str, float | int]) -> None:
         print(f"{key:28} {format_value(value)}")
 
 
+def print_config(config_data: dict[str, object]) -> None:
+    workload = config_data["workload"]
+    tiers = config_data["tiers"]
+    compression = config_data["compression"]
+    policy = config_data["policy"]
+    pipeline = config_data["pipeline"]
+
+    print("KVFlow configuration")
+    print(f"workload_path               {config_data['workload_path']}")
+    print(f"workload_name               {workload['name']}")
+    print(f"workload_description        {workload['description']}")
+    print(f"model_layers                {workload['model_layers']}")
+    print(f"num_heads                   {workload['num_heads']}")
+    print(f"head_dim                    {workload['head_dim']}")
+    print(f"batch_size                  {workload['batch_size']}")
+    print(f"context_length              {workload['context_length']}")
+    print(f"decode_steps                {workload['decode_steps']}")
+    print(f"dtype_bytes                 {workload['dtype_bytes']}")
+    print(f"kv_block_tokens             {workload['kv_block_tokens']}")
+    print(f"assumed_kv_block_size_bytes {config_data['assumed_kv_block_size_bytes']}")
+    print("")
+    print("Memory tiers")
+    for tier_name, tier_data in tiers.items():
+        print(
+            f"{tier_name:28} capacity={format_value(tier_data['capacity_bytes'])} bytes "
+            f"bandwidth={format_value(tier_data['bandwidth_gbps'])} GB/s "
+            f"latency={format_value(tier_data['latency_ns'])} ns"
+        )
+    print("")
+    print("Compression model")
+    for state, ratio in compression["ratios"].items():
+        penalty = compression["decompression_penalties_ns"][state]
+        print(f"{state:28} ratio={ratio} penalty_ns={penalty}")
+    print("")
+    print("Policy / pipeline")
+    for key, value in policy.items():
+        print(f"{key:28} {value}")
+    for key, value in pipeline.items():
+        print(f"{key:28} {value}")
+    print("")
+
+
 def print_compare_table(baseline: dict[str, float | int], kvflow: dict[str, float | int]) -> None:
     keys = [
         "total_bytes_moved",
@@ -27,10 +69,12 @@ def print_compare_table(baseline: dict[str, float | int], kvflow: dict[str, floa
         "host_bytes_read",
         "compression_savings_bytes",
         "simulated_latency_ns",
-        "overlapped_transfer_ns",
+        "compute_latency_ns",
+        "transfer_latency_ns",
+        "decompression_latency_ns",
+        "hidden_transfer_ns",
         "exposed_transfer_ns",
-        "dma_overlap_ratio",
-        "decompression_overlap_ratio",
+        "overlap_ratio",
         "sram_hit_rate",
         "blocks_evicted",
         "blocks_compressed",
@@ -52,10 +96,17 @@ def print_compare_table(baseline: dict[str, float | int], kvflow: dict[str, floa
         )
 
 
-def run_mode(mode: str) -> dict[str, float | int]:
+def make_config(workload_path: str | None) -> SimulationConfig:
     config = SimulationConfig.default()
+    if workload_path is not None:
+        config.with_workload_path(Path(workload_path))
+    return config
+
+
+def run_mode(mode: str, workload_path: str | None = None) -> tuple[dict[str, float | int], dict[str, object]]:
+    config = make_config(workload_path)
     simulator = Simulator(config, mode=mode)
-    return simulator.run().as_dict()
+    return simulator.run().as_dict(), simulator.describe_config()
 
 
 def parse_args() -> argparse.Namespace:
@@ -66,20 +117,37 @@ def parse_args() -> argparse.Namespace:
         default="compare",
         help="Execution mode: baseline path, KVFlow path, or side-by-side comparison.",
     )
+    parser.add_argument(
+        "--workload",
+        help="Optional workload JSON path. Example: examples/workloads/default_8k.json",
+    )
+    parser.add_argument(
+        "--show-config",
+        action="store_true",
+        help="Print workload, tier, compression, and pipeline assumptions before metrics.",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
     if args.mode == "baseline":
-        print_metrics("KVFlow baseline run", run_mode("baseline"))
+        metrics, config_data = run_mode("baseline", args.workload)
+        if args.show_config:
+            print_config(config_data)
+        print_metrics("KVFlow baseline run", metrics)
         return
     if args.mode == "kvflow":
-        print_metrics("KVFlow semantic orchestration run", run_mode("kvflow"))
+        metrics, config_data = run_mode("kvflow", args.workload)
+        if args.show_config:
+            print_config(config_data)
+        print_metrics("KVFlow semantic orchestration run", metrics)
         return
 
-    baseline = run_mode("baseline")
-    kvflow = run_mode("kvflow")
+    baseline, config_data = run_mode("baseline", args.workload)
+    kvflow, _ = run_mode("kvflow", args.workload)
+    if args.show_config:
+        print_config(config_data)
     print_compare_table(baseline, kvflow)
 
 

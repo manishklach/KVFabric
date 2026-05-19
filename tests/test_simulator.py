@@ -25,6 +25,9 @@ def test_kvflow_generates_compression_and_sram_hits() -> None:
     metrics = Simulator(config, mode="kvflow").run()
     assert metrics.blocks_compressed > 0
     assert metrics.sram_hit_rate > 0.0
+    assert metrics.prefetched_blocks > 0
+    assert metrics.staged_blocks > 0
+    assert metrics.dma_overlap_ratio >= 0.0
 
 
 def test_baseline_and_kvflow_produce_metrics() -> None:
@@ -33,3 +36,5 @@ def test_baseline_and_kvflow_produce_metrics() -> None:
     kvflow = Simulator(config, mode="kvflow").run()
     assert baseline.total_accesses > 0
     assert kvflow.total_accesses > 0
+    assert "overlapped_transfer_ns" in kvflow.as_dict()
+    assert "prefetched_blocks" in kvflow.as_dict()

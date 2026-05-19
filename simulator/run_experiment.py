@@ -27,9 +27,15 @@ def print_compare_table(baseline: dict[str, float | int], kvflow: dict[str, floa
         "host_bytes_read",
         "compression_savings_bytes",
         "simulated_latency_ns",
+        "overlapped_transfer_ns",
+        "exposed_transfer_ns",
+        "dma_overlap_ratio",
+        "decompression_overlap_ratio",
         "sram_hit_rate",
         "blocks_evicted",
         "blocks_compressed",
+        "prefetched_blocks",
+        "staged_blocks",
     ]
 
     metric_width = 27

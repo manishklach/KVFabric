@@ -22,6 +22,8 @@ class KVBlock:
     temperature: str = "cold"
     compression_state: str = "none"
     current_tier: str = "hbm"
+    staged_in_sram: bool = False
+    last_prefetch_step: int = -1
 
     def effective_size_bytes(self) -> int:
         ratio = COMPRESSION_RATIOS[self.compression_state]

@@ -44,11 +44,21 @@ class PolicyConfig:
 
 
 @dataclass(slots=True)
+class PipelineConfig:
+    """Approximate decode-pipeline timing knobs."""
+
+    compute_ns_per_access: float = 180.0
+    sram_stage_latency_ns: float = 40.0
+    max_prefetch_per_step: int = 48
+
+
+@dataclass(slots=True)
 class SimulationConfig:
     """Top-level simulator configuration with conservative defaults."""
 
     tiers: dict[str, TierConfig] = field(default_factory=dict)
     policy: PolicyConfig = field(default_factory=PolicyConfig)
+    pipeline: PipelineConfig = field(default_factory=PipelineConfig)
     workload_path: Path = field(
         default_factory=lambda: Path(__file__).resolve().parent.parent / "examples" / "sample_workload.json"
     )

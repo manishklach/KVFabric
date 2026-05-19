@@ -48,7 +48,7 @@ class KVScheduler:
         if self.mode == "baseline":
             return ["hbm", "cxl", "dram"]
         if block.temperature == "hot":
-            return ["sram", "hbm", "cxl", "dram"]
+            return ["hbm", "cxl", "dram"]
         if block.temperature == "warm":
             return ["hbm", "cxl", "dram"]
         return ["cxl", "dram", "hbm"]
@@ -63,7 +63,7 @@ class KVScheduler:
             if block_id in seen:
                 continue
             block = blocks[block_id]
-            if block.temperature == "hot" and block.current_tier != "sram":
+            if block.temperature == "hot" and not block.staged_in_sram:
                 unique_candidates.append(block)
                 seen.add(block_id)
             if len(unique_candidates) >= self.policy.prefetch_window:
@@ -92,7 +92,6 @@ class KVScheduler:
         source_tier.free(block.block_id, size_bytes)
         block.current_tier = target_tier_name
         metrics.total_bytes_moved += size_bytes
-        metrics.simulated_latency_ns += source_tier.transfer_time_ns(size_bytes) + target_tier.transfer_time_ns(size_bytes)
         return True
 
     def _evict_for_fit(

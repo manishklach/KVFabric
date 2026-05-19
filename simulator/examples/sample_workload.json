@@ -1,0 +1,9 @@
+{
+  "model_layers": 32,
+  "num_heads": 32,
+  "head_dim": 128,
+  "batch_size": 4,
+  "context_length": 8192,
+  "decode_steps": 128,
+  "dtype_bytes": 2
+}
